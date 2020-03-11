@@ -22,7 +22,7 @@ namespace GRM
         public const int CEILING_WET = 200;
         public const int CEILING_DAMP = 300;
 
-        private int TSSI_MAX = 24;
+        private int TSSI_MAX = 22;
         private int TSSI_MIN = 1;
 
         enum TagModel
@@ -130,7 +130,6 @@ namespace GRM
             readerCount = 0;
             heartbeatListener.heartbeatEvent += heartbeatHandler;
             heartbeatListener.Start();
-            DeserializeCompanyInformation();
             CreateDatabase();
 
             //Create Threads on startup of program
@@ -565,61 +564,6 @@ namespace GRM
 
         //Utilities and Setup///////////////////////////////////////////////////////////////////////////
 
-        //private void connectedReaderChecker()
-        //{
-        //    bool found = false;
-        //    for (int idx = 120; idx > 0; idx--)
-        //    {
-        //        if (currentReaders.ContainsKey(connectedReaderMAC))
-        //        {
-        //            reader = new RFIDEngineeringReader(currentReaders[connectedReaderMAC][1], 5000);
-        //            found = true;
-        //            readerConnected = true;
-        //            main.Invoke(new MethodInvoker(delegate { main.BringToFront(); }));
-        //            break;
-        //        }
-        //        else
-        //        {
-        //            if (!programEnding)
-        //            {
-        //                Thread.Sleep(1000);
-        //                if (!programEnding)
-        //                {
-        //                    try
-        //                    {
-        //                        numberTimeRemaining.Invoke(new MethodInvoker(delegate { numberTimeRemaining.Text = idx.ToString(); }));
-        //                    }
-        //                    catch (Exception) { };
-        //                }
-
-        //            }
-        //        }
-        //    }
-        //    if (!found && !programEnding)
-        //        admin.Invoke(new MethodInvoker(delegate { admin.BringToFront(); }));
-
-        //}
-
-        private void checkConnection()
-        {
-            string readerName = "";
-            while (!programEnding)
-            {
-                if (readerConnected && !currentlyReading)
-                {
-                    try
-                    {
-                        reader.GetReaderName(out readerName);
-                        Thread.Sleep(1000);
-                    }
-                    catch (Exception)
-                    {
-                        readerConnected = false;
-                    }
-                }
-            }
-        } //not using yet/Doesnt work yet
-
         private void readTSSI()
         {
             if (CONSOLE_DEBUG)
@@ -705,7 +649,6 @@ namespace GRM
             byte[] hopFrequency = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0x82, 0x00, 0x32, 0xF7, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }; // Not currently used. Can be used to select a particular frequency
             byte[] Antenna1Active = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
             byte[] queryGroup = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0x30, 0x00, this.Session, this.QueryTarget_TSSI, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-            //byte[] gen2Settings = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0x34, 0x00, 0x03, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
             byte[] gen2Settings = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0x34, 0x00, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
             byte[] shortTagData = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }; // Will not be used, but this will allow for changing to the shorter tag data
             byte[] extendedTagData = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0x0E, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -1068,22 +1011,6 @@ namespace GRM
             }
         }
 
-        //private void MSRC_FormClosing(object sender, FormClosingEventArgs e)
-        //{
-        //    heartbeatListener.Stop();
-
-        //    programEnding = true; //provide flag to threads that the program is terminating
-        //                            //allow all threads to resume and exit gracefully...
-        //    mreFind.Set();
-        //    mreDisplayWet.Set();
-        //    mreDisplayDry.Set();
-        //    mreDisplayDamp.Set();
-        //    mreUpdateMap.Set();
-        //    mredetailedView.Set();
-
-        //    Properties.Settings.Default["MACAddress"] = connectedReaderMAC;
-        //    Properties.Settings.Default.Save();
-        //}
 
         private void CreateDatabase()
         {
