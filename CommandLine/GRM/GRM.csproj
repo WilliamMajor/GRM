@@ -33,17 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AsyncRFIDReader, Version=1.0.2.10, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\AsyncRFIDReader.dll</HintPath>
-    </Reference>
     <Reference Include="RFID, Version=1.0.2.8, Culture=neutral, PublicKeyToken=a567adc9921f2a1e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\RFID.dll</HintPath>
-    </Reference>
-    <Reference Include="RFIDEngineeringReader, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\RFIDEngineeringReader.dll</HintPath>
+      <HintPath>..\..\msrc_simple\MSRC\bin\Debug\RFID.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -74,6 +66,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="RFIDEngineeringReader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -17,13 +17,13 @@ namespace MSRC
 {
     public partial class MSRC : Form
     {
-        private bool DEBUG_VIEW = true;
+        private bool DEBUG_VIEW = false;
         private bool CONSOLE_DEBUG = false;
 
-        public const int CEILING_WET = 200;
-        public const int CEILING_DAMP = 300;
+        public  int CEILING_WET = 200;
+        public  int CEILING_DAMP = 300;
 
-        private int TSSI_MAX = 24;
+        private int TSSI_MAX = 21;
         private int TSSI_MIN = 1;
 
         enum TagModel
@@ -70,10 +70,10 @@ namespace MSRC
         HeartbeatListener heartbeatListener = null;
         Dictionary<string, string[]> currentReaders = null;
         Dictionary<string, string[]> companyInformation = null;
-        //ConcurrentDictionary<string, double[]> allTagInformation = null;
         ConcurrentDictionary<string, TagObject> newAllTagInformation = null;
-        //Dictionary<string, double[]> tagInformation = null;
         Dictionary<string, TagObject> newTagInformation = null;
+        Dictionary<string, int[]> countryFrequencyMap = null;
+        Dictionary<string, UInt64> calibrationData = null;
         Object allTagInfoLock = new Object();
         List<ListViewItem> currentReaderList = null;
         List<ListViewItem> currentTagList = null;
@@ -82,6 +82,7 @@ namespace MSRC
         Thread findTagsThread = null;
         Thread displayDampTag = null;
         Thread displayDryTag = null;
+        Thread displayWetTag = null;
         Thread updateMap = null;
         Thread detailedView = null;
 
@@ -94,7 +95,21 @@ namespace MSRC
         private ManualResetEvent mreUpdateMap = new ManualResetEvent(false);
         private ManualResetEvent mredetailedView = new ManualResetEvent(false);
 
-        private double[] powerArray = { 33.0, 31.5, 30, 28, 26, 24, 22, 20, 18, 16, 14, 12 };
+        private double[] powerArrayRange = { 33.0, 31.5, 30, 28, 26, 24, 22, 20, 18, 16, 14, 12 };
+        private double[] powerArray = { 24, 26, 22, 28, 20, 30, 18, 31.5, 16, 33, 14, 12};
+        private int[] USAFreqLUT = {915250, 916250, 914250, 915750, 914750,
+                                    916750, 913250, 917250, 913250, 917750,
+                                    912750, 918250, 912250, 918750, 911750,
+                                    919250, 911250, 919750, 910750, 920250,
+                                    910250, 920750, 909750, 921250, 909250,
+                                    921750, 908750, 922250, 908250, 922750,
+                                    907750, 923250, 907250, 923750, 906750,
+                                    924250, 906250, 924750, 905750, 925250,
+                                    905250, 925750, 904750, 926250, 904250,
+                                    926750, 903750, 927250, 903250, 902750};
+
+        private int[] SingaporeLUT ={922750, 921250, 923750, 922250, 923250,
+                                     921250, 924250, 920750, 924750, 920250};
         double currentPowerLevel = 0;
 
         int readerCount = 0;
@@ -102,10 +117,14 @@ namespace MSRC
         bool goodTSSI = false;
         bool programEnding = false;
         bool readerConnected = false;
+        bool valuesFlipped = false;
+        bool readMoisture = (bool)Properties.Settings.Default["ReadMoisture"];
+        bool readTemperature = (bool)Properties.Settings.Default["ReadTemp"];
         string tagListFileName = "taglist.bin";
         string companyFileName = "companyList.bin";
         string connectedReaderMAC = Properties.Settings.Default["MACAddress"].ToString();
         string readerType = " ";
+        string region = Properties.Settings.Default["Region"].ToString();
 
         private SoundPlayer tagBeep = new SoundPlayer("beep-08b.wav");
 
@@ -114,9 +133,14 @@ namespace MSRC
 
         bool starting = true;
 
-        public MSRC()
+        public MSRC(string[] args)
         {
             InitializeComponent();
+
+            if (args.Length == 0)
+                DEBUG_VIEW = false;
+            else if (args[0] == "-sensthysdebug")
+                DEBUG_VIEW = true;
 
             int numWorkerThreads;
             int numComplPortThreads;
@@ -141,6 +165,10 @@ namespace MSRC
             newAllTagInformation = new ConcurrentDictionary<string, TagObject>();
             //tagInformation = new Dictionary<string, double[]>();
             newTagInformation = new Dictionary<string, TagObject>();
+            calibrationData = new Dictionary<string, ulong>();
+            countryFrequencyMap = new Dictionary<string, int[]>();
+            countryFrequencyMap.Add("USA", USAFreqLUT);
+            countryFrequencyMap.Add("Singapore", SingaporeLUT);
 
             this.frequencyTable = new int[50];
 
@@ -150,10 +178,10 @@ namespace MSRC
             this.cbxMinPower.Items.Clear();
             this.cbxMaxPower.Items.Clear();
 
-            for (int idx = 0; idx < powerArray.Length; idx++)
+            for (int idx = 0; idx < powerArrayRange.Length; idx++)
             {
-                this.cbxMinPower.Items.Add(powerArray[idx]);
-                this.cbxMaxPower.Items.Add(powerArray[idx]);
+                this.cbxMinPower.Items.Add(powerArrayRange[idx]);
+                this.cbxMaxPower.Items.Add(powerArrayRange[idx]);
             }
 
             // Force the window handle to be created so that the heartbeat
@@ -176,6 +204,7 @@ namespace MSRC
             findTagsThread = new Thread(findTags);
             displayDryTag = new Thread(mapDisplayDry);
             displayDampTag = new Thread(mapDisplayDamp);
+            displayWetTag = new Thread(mapDisplayWet);
             //checkReaderConnection = new Thread(checkConnection);
             detailedView = new Thread(detailedListview);
 
@@ -183,6 +212,7 @@ namespace MSRC
             findTagsThread.Start();
             displayDryTag.Start();
             displayDampTag.Start();
+            displayWetTag.Start();
             updateMap.Start();
             detailedView.Start();
 
@@ -192,23 +222,33 @@ namespace MSRC
             checkBox4.Checked = Properties.Settings.Default.Antenna4;
             cbTR.Checked = Properties.Settings.Default.TimesRead;
             cbTSSI.Checked = Properties.Settings.Default.TSSI;
-            cbTSSIAvg.Checked = Properties.Settings.Default.TSSIAvg;
             cbSCDE.Checked = Properties.Settings.Default.SCDE;
             cbSCDEAvg.Checked = Properties.Settings.Default.SCDEAvg;
             cbSTdDev.Checked = Properties.Settings.Default.StdDev;
             cbTS.Checked = Properties.Settings.Default.TagState;
             cbTemp.Checked = Properties.Settings.Default.Temperature;
+            nudDThresh.Value = Properties.Settings.Default.DryThreshold;
+            nudWThresh.Value = Properties.Settings.Default.WetThreshold;
+            // These should be done in this order so that error check in the
+            // change event handler doesn't complain.
+            nudTSSIMax.Value = Properties.Settings.Default.TssiMaxIndex;
+            nudTSSIMin.Value = Properties.Settings.Default.TssiMinIndex;
+            cbMoistureEnable.Checked = Properties.Settings.Default.ReadMoisture;
+            cbTempEnable.Checked = Properties.Settings.Default.ReadTemp;
+            nudTimeAvg.Value = Properties.Settings.Default.AvgTime;
+            CEILING_WET = (int)nudWThresh.Value;
+            CEILING_DAMP = (int)nudDThresh.Value;
+
+            valuesFlipped = (CEILING_DAMP < CEILING_WET);
 
 
             this.starting = true;
-            cbxMinPower.SelectedIndex = Properties.Settings.Default.PowerMinIndex;
             cbxMaxPower.SelectedIndex = Properties.Settings.Default.PowerMaxIndex;
+            cbxMinPower.SelectedIndex = Properties.Settings.Default.PowerMinIndex;  
             this.starting = false;
 
-            // These should be done in this order so that error check in the
-            // change event handler doesn't complain.
-            //nudTSSIMax.Value = Properties.Settings.Default.TssiMaxIndex;
-            //nudTSSIMin.Value = Properties.Settings.Default.TssiMinIndex;
+
+            
 
 
 
@@ -225,22 +265,69 @@ namespace MSRC
                     break;
             }
 
+            //if (!DEBUG_VIEW)
+            //{
+            //    detailedTagView.Columns.Remove(colTSSI);
+            //    detailedTagView.Columns.Remove(colTSSIAvg);
+            //    detailedTagView.Columns.Remove(colSCDE);
+            //    detailedTagView.Columns.Remove(colTemp);
+            //}
+
             if (!DEBUG_VIEW)
             {
-                detailedTagView.Columns.Remove(colTSSI);
-                detailedTagView.Columns.Remove(colTSSIAvg);
-                detailedTagView.Columns.Remove(colSCDE);
+                if(readMoisture && readTemperature)
+                {
+                    cbTR.Checked = true;
+                    cbTS.Checked = true;
+                    cbSCDEAvg.Checked = true;
+                    cbTemp.Checked = true;
+                }
+                if(!readMoisture && readTemperature)
+                {
+                    cbTR.Checked = false;
+                    cbTS.Checked = false;
+                    cbSCDEAvg.Checked = false;
+                    cbTR.Checked = false;
+                    cbTemp.Checked = true;
+                }
+                if(readMoisture && readTemperature)
+                {
+                    cbTR.Checked = true;
+                    cbTS.Checked = true;
+                    cbSCDEAvg.Checked = true;
+                    cbTemp.Checked = false;
+                }
+                gbSelCol.Visible = false;
+                gbTSSI.Visible = false;
+                cbSTdDev.Checked = false;
+                cbSCDE.Checked = false;
+                cbTSSI.Checked = false;
             }
+            else
+                gbSensorSelect.Visible = false;
 
-            if (DEBUG_VIEW)
-                try
+
+
+            try
+            {
+                this.debugDataStream = new StreamWriter(this.debugFileName);
+                if (DEBUG_VIEW)
                 {
-                    this.debugDataStream = new StreamWriter(this.debugFileName);
-                }
-                catch
-                {
+                    debugDataStream.Write("Time, EPC, Power, TSSI, RSSI, Code, Temperature, Running Average, Times Read, Latitude, Longitude, Frequence");
+                    debugDataStream.WriteLine();
 
                 }
+                else
+                {
+                    debugDataStream.Write("Time, EPC, Temperature, Code, Running Average, Times Read");
+                    debugDataStream.WriteLine();
+                }
+            }
+            catch
+            {
+
+            }
+                
         }
 
         //Buttons & Console Actions///////////////////////////////////////////////////////////////////////////////////////
@@ -255,6 +342,15 @@ namespace MSRC
             //if (companyInformation.Count == 0)
             //    MessageBox.Show("No Companies Entered Into The Database Please Fill Company Information Before Mapping Roof", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             //else 
+            if(!DEBUG_VIEW)
+            {
+                cbTemp.Checked = readTemperature;
+                cbTR.Checked = readMoisture;
+                cbTS.Checked = readMoisture;
+                cbSCDEAvg.Checked = readMoisture;
+            }
+           
+
             if (antennaCount == 0)
                 MessageBox.Show("Please Select At Least One Antenna For Operation", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             else
@@ -434,11 +530,27 @@ namespace MSRC
                 newTagInformation.Clear();
                 detailedTagList.Clear();
 
-                if (DEBUG_VIEW)
+                try
                 {
                     this.debugDataStream.Close();
                     this.debugDataStream = new StreamWriter(this.debugFileName);
+                    if (DEBUG_VIEW)
+                    {
+                        debugDataStream.Write("Time, EPC, Power, TSSI, RSSI, Code, Temperature, Running Average, Times Read, Latitude, Longitude, Frequence");
+                        debugDataStream.WriteLine();
+                    }
+                    else
+                    {
+                        debugDataStream.Write("Time, EPC, Temperature, Code, Running Average, Times Read");
+                        debugDataStream.WriteLine();
+                    }
                 }
+                catch
+                {
+
+                }
+                
+
 
                 detailedTagView.Invoke(new MethodInvoker(delegate { detailedTagView.Items.Clear(); }));
                 lstTagView.Invoke(new MethodInvoker(delegate { lstTagView.Items[0].SubItems[1].Text = "0"; }));
@@ -695,8 +807,8 @@ namespace MSRC
                 int sequence = 0;
                 int powerIndex = 0;
                 int frequencyIndex = 0;
-                int minPowerIndex = 0;
-                int maxPowerIndex = 0;
+                double minPowerValue = 0;
+                double maxPowerValue = 0;
 
                 setupReader(); // place the initial settings onto the connected reader
 
@@ -715,15 +827,15 @@ namespace MSRC
 
                 main.Invoke(new MethodInvoker(delegate
                 {
-                    minPowerIndex = cbxMinPower.SelectedIndex;
-                    maxPowerIndex = cbxMaxPower.SelectedIndex;
+                    minPowerValue = Convert.ToDouble(cbxMinPower.SelectedItem.ToString());
+                    maxPowerValue = Convert.ToDouble(cbxMaxPower.SelectedItem.ToString());
 
                     //TSSI_MAX = (int)nudTSSIMax.Value;
                     //TSSI_MIN = (int)nudTSSIMin.Value;
                 }));
 
-                powerIndex = maxPowerIndex;
-                frequencyIndex = 16;
+                powerIndex = 0;
+                frequencyIndex = 0;
 
                 this.ChangeFrequency(frequencyIndex);
                 this.ChangePower(powerIndex, antennas[sequence]);
@@ -741,7 +853,7 @@ namespace MSRC
                         readSensorCode();
                     else if (CONSOLE_DEBUG)
                         Console.WriteLine("!!!!!!!!!!!!!!!!!! Skipping Sensor Code Read: goodTSSI = false");
-
+                    
                     if (tagModel == TagModel.Magnus3)
                         readTempValue(); // Read the temperature value regardless of what we return for TSSI as it shouldn't matter
 
@@ -750,15 +862,30 @@ namespace MSRC
                     goodTSSI = false;
 
                     frequencyIndex++;
-                    if (frequencyIndex >= this.frequencyTable.Length)
+                    if (frequencyIndex >= countryFrequencyMap[region].Length)
                         frequencyIndex = 0;
+
 
                     this.ChangeFrequency(frequencyIndex);
 
-                    if (powerIndex > minPowerIndex)
+                    if (powerArray[powerIndex] < minPowerValue || powerIndex == powerArray.Length - 1)
                     {
-                        powerIndex = maxPowerIndex;
-                        sequence++;
+                        if(powerIndex != 11)
+                            powerIndex++;
+                        if(powerArray[powerIndex] > maxPowerValue || powerIndex == powerArray.Length-1)
+                        {
+                            powerIndex = 0;
+                            sequence++;
+                        }  
+                    }
+                    if (powerArray[powerIndex] > maxPowerValue)
+                    {
+                        powerIndex++;
+                        if (powerArray[powerIndex] < minPowerValue)
+                        {
+                            powerIndex = 0;
+                            sequence++;
+                        }
                     }
 
                     if (sequence >= antennaCount)
@@ -847,56 +974,22 @@ namespace MSRC
                 {
                     TagObject allTagObject = new TagObject();
 
-                    if (DEBUG_VIEW)
-                    {
-                        debugDataStream.Write("{0}, {1}, {2}, ", DateTime.Now.ToString(), entry.Key, this.currentPowerLevel);
-                        debugDataStream.Write("{0}, ", entry.Value.TSSI);
-                        debugDataStream.Write("{0}, ", entry.Value.SCDEraw);
-                        debugDataStream.Write("{0}, ", entry.Value.SCDE);
-                        debugDataStream.Write("{0}, ", entry.Value.TEMP);
-                        debugDataStream.Write("{0}, ", entry.Value.RSSI);
-                        debugDataStream.Write("{0}, ", entry.Value.SCDEAvg);
-                        debugDataStream.Write("{0}, ", entry.Value.SCDEStdDev);
-                        debugDataStream.Write("{0}, ", entry.Value.TimesRead);
-                        debugDataStream.Write("{0}, ", entry.Value.TotalSCDEValue);
-                        debugDataStream.Write("{0}, ", entry.Value.Lat);
-                        debugDataStream.Write("{0}, ", entry.Value.Lon);
-                        debugDataStream.Write("{0}, ", entry.Value.freq_TSSI);
-                        debugDataStream.Write("{0}, ", entry.Value.freq_SCDE);
-                    }
-
-                    if (CONSOLE_DEBUG)
-                    {
-                        Console.Write("Read: ");
-                        Console.Write("{0}, {1}, {2}, ", DateTime.Now.ToString(), entry.Key, this.currentPowerLevel);
-                        Console.Write("{0}, ", entry.Value.TSSI);
-                        Console.Write("{0}, ", entry.Value.SCDEraw);
-                        Console.Write("{0}, ", entry.Value.SCDE);
-                        Console.Write("{0}, ", entry.Value.TEMP);
-                        Console.Write("{0}, ", entry.Value.RSSI);
-                        Console.Write("{0}, ", entry.Value.SCDEAvg);
-                        Console.Write("{0}, ", entry.Value.SCDEStdDev);
-                        Console.Write("{0}, ", entry.Value.TimesRead);
-                        Console.Write("{0}, ", entry.Value.TotalSCDEValue);
-                        Console.Write("{0}, ", entry.Value.Lat);
-                        Console.Write("{0}, ", entry.Value.Lon);
-                        Console.Write("{0}, ", entry.Value.freq_TSSI);
-                        Console.Write("{0}, ", entry.Value.freq_SCDE);
-                        Console.WriteLine();
-                    }
+                   
 
                     if (newAllTagInformation.TryGetValue(entry.Key, out allTagObject))
                     {
 
                         // Entry found. Update
-                        if (entry.Value.TSSI > 0 && entry.Value.SCDE > 0)
+                        if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
                         {
                             allTagObject.TSSI = entry.Value.TSSI;
-                            allTagObject.TSSIValues.AddLast(entry.Value.TSSI);
-                            allTagObject.SCDE = entry.Value.SCDE;
-                            allTagObject.SCDEValues.AddLast(entry.Value.SCDE);
+                            //TSSIDatetime newTSSIRead = new TSSIDatetime(entry.Value.TSSI, DateTime.Now);
+                            //allTagObject.TSSIValues.AddLast(newTSSIRead);
+                            allTagObject.SCDEraw = entry.Value.SCDEraw;
+                            SCDEDatetime newRead = new SCDEDatetime(entry.Value.SCDEraw, DateTime.Now);
+                            allTagObject.SCDEValues.AddLast(newRead);
+                            //allTagObject.SCDEValues.AddLast(entry.Value.SCDEraw);
                             allTagObject.SCDEStdDev = calculateLLStdDeviation(allTagObject.SCDEValues);
-                            allTagObject.TEMP = entry.Value.TEMP;
                             allTagObject.RSSI = entry.Value.RSSI;
 
                             //if (allTagObject.TSSIValues.Count > 10)
@@ -905,81 +998,124 @@ namespace MSRC
                             //    allTagObject.SCDEValues.RemoveFirst();
 
                             if (allTagObject.SCDEAvg == 0)
-                                allTagObject.SCDEAvg = entry.Value.SCDE;
+                                allTagObject.SCDEAvg = entry.Value.SCDEraw;
                             else
                             {
                                 //if (allTagObject.SCDEValues.Count < 5)
                                 //    allTagObject.SCDEAvg = allTagObject.SCDEAvg * (1.0 - k) + entry.Value.SCDE * k;
                                 //else
-                                    allTagObject.SCDEAvg = calculateLLAverage(allTagObject.SCDEValues);
+                                    allTagObject.SCDEAvg = calculateLLAverageSCDE(allTagObject.SCDEValues);
                             }
-                            if (allTagObject.TSSIAvg == 0)
-                                allTagObject.TSSIAvg = entry.Value.TSSI;
-                            else
-                            {
-                                //if (allTagObject.TSSIValues.Count < 5)
-                                //    allTagObject.TSSIAvg = allTagObject.TSSIAvg * (1.0 - k) + entry.Value.TSSI * k;
-                                //else
-                                    allTagObject.TSSIAvg = calculateLLAverage(allTagObject.TSSIValues);
-                            }
+                            //if (allTagObject.TSSIAvg == 0)
+                            //    allTagObject.TSSIAvg = entry.Value.TSSI;
+                            //else
+                            //{
+                            //    //if (allTagObject.TSSIValues.Count < 5)
+                            //    //    allTagObject.TSSIAvg = allTagObject.TSSIAvg * (1.0 - k) + entry.Value.TSSI * k;
+                            //    //else
+                            //        allTagObject.TSSIAvg = calculateLLAverageSCDE(allTagObject.TSSIValues);
+                            //}
                                 
 
                             allTagObject.TimesRead++;       
-                            allTagObject.TotalSCDEValue = allTagObject.TotalSCDEValue + entry.Value.SCDE;
+                            allTagObject.TotalSCDEValue = allTagObject.TotalSCDEValue + entry.Value.SCDEraw;
+
+                            if (DEBUG_VIEW)
+                            {
+                                if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
+                                {
+                                    debugDataStream.Write("{0}, {1}, {2}, ", DateTime.Now.ToString(), entry.Key, this.currentPowerLevel);
+                                    debugDataStream.Write("{0}, ", allTagObject.TSSI);
+                                    debugDataStream.Write("{0}, ", allTagObject.RSSI);
+                                    debugDataStream.Write("{0}, ", allTagObject.SCDEraw);
+                                    debugDataStream.Write("{0}, ", allTagObject.TEMP);
+                                    debugDataStream.Write("{0}, ", allTagObject.SCDEAvg);
+                                    debugDataStream.Write("{0}, ", allTagObject.TimesRead);
+                                    debugDataStream.Write("{0}, ", allTagObject.Lat);
+                                    debugDataStream.Write("{0}, ", allTagObject.Lon);
+                                    debugDataStream.Write("{0}, ", entry.Value.freq_SCDE);
+                                    debugDataStream.WriteLine();
+                                    debugDataStream.Flush();
+                                }
+
+                            }
+                            else if(readTemperature && readMoisture)
+                            {
+                                if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
+                                {
+                                    debugDataStream.Write("{0}, {1}, ", DateTime.Now.ToString(), entry.Key);
+                                    debugDataStream.Write("{0}, ", allTagObject.TEMP);
+                                    debugDataStream.Write("{0}, ", allTagObject.SCDEraw);
+                                    debugDataStream.Write("{0}, ", allTagObject.SCDEAvg);
+                                    debugDataStream.Write("{0}, ", allTagObject.TimesRead);
+                                    debugDataStream.WriteLine();
+                                    debugDataStream.Flush();
+                                }
+                            }
+                            else if (readTemperature && !readMoisture)
+                            {
+                                if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
+                                {
+                                    debugDataStream.Write("{0}, {1}, ", DateTime.Now.ToString(), entry.Key);
+                                    debugDataStream.Write("{0}, ", allTagObject.TEMP);
+                                    debugDataStream.Write(" -, ");
+                                    debugDataStream.Write(" -, ");
+                                    debugDataStream.Write(" -, ");
+                                    debugDataStream.WriteLine();
+                                    debugDataStream.Flush();
+                                }
+                            }
+                            else if (!readTemperature && readMoisture)
+                            {
+                                if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
+                                {
+                                    debugDataStream.Write("{0}, {1}, ", DateTime.Now.ToString(), entry.Key);
+                                    debugDataStream.Write(" -, ");
+                                    debugDataStream.Write("{0}, ", allTagObject.SCDEraw);
+                                    debugDataStream.Write("{0}, ", allTagObject.SCDEAvg);
+                                    debugDataStream.Write("{0}, ", allTagObject.TimesRead);
+                                    debugDataStream.WriteLine();
+                                    debugDataStream.Flush();
+                                }
+                            }
+
+                            if (CONSOLE_DEBUG)
+                            {
+                                if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
+                                {
+                                    Console.Write("Read: ");
+                                    Console.Write("{0}, {1}, {2}, ", DateTime.Now.ToString(), entry.Key, this.currentPowerLevel);
+                                    Console.Write("{0}, ", allTagObject.TSSI);
+                                    Console.Write("{0}, ", allTagObject.SCDEraw);
+                                    Console.Write("{0}, ", allTagObject.TEMP);
+                                    Console.Write("{0}, ", allTagObject.RSSI);
+                                    Console.Write("{0}, ", allTagObject.SCDEAvg);
+                                    Console.Write("{0}, ", allTagObject.TimesRead);
+                                    Console.Write("{0}, ", allTagObject.Lat);
+                                    Console.Write("{0}, ", allTagObject.Lon);
+                                    Console.Write("{0}, ", entry.Value.freq_SCDE);
+                                    Console.WriteLine();
+                                }
+                            }
                         }
                         else
                             allTagObject.RSSI = entry.Value.RSSI;
 
                         if (entry.Value.TEMP != 0)
-                            allTagObject.TEMP = entry.Value.TEMP;
-
-                        if (DEBUG_VIEW)
                         {
-                            debugDataStream.Write("{0}, ", allTagObject.TSSI);
-                            debugDataStream.Write("{0}, ", allTagObject.SCDE);
-                            debugDataStream.Write("{0}, ", allTagObject.TEMP);
-                            debugDataStream.Write("{0}, ", allTagObject.RSSI);
-                            debugDataStream.Write("{0}, ", allTagObject.SCDEAvg);
-                            debugDataStream.Write("{0}, ", allTagObject.SCDEStdDev);
-                            debugDataStream.Write("{0}, ", allTagObject.TimesRead);
-                            debugDataStream.Write("{0}, ", allTagObject.TotalSCDEValue);
-                            debugDataStream.Write("{0}, ", allTagObject.Lat);
-                            debugDataStream.Write("{0}, ", allTagObject.Lon);
-                            debugDataStream.Write("{0}, ", allTagObject.freq_TSSI);
-                            debugDataStream.Write("{0}, ", allTagObject.freq_SCDE);
-
-                            debugDataStream.WriteLine();
-                            debugDataStream.Flush();
+                            TempDateTime TemperatureObj = new TempDateTime(entry.Value.TEMP, DateTime.Now);
+                            allTagObject.TempValues.AddLast(TemperatureObj);
+                            allTagObject.TEMP = calculateLLAverageTemp(allTagObject.TempValues);
                         }
-
-                        if (CONSOLE_DEBUG)
-                        {
-                            Console.Write("Update: ");
-                            Console.Write("{0}, ", allTagObject.TSSI);
-                            Console.Write("{0}, ", allTagObject.SCDE);
-                            Console.Write("{0}, ", allTagObject.TEMP);
-                            Console.Write("{0}, ", allTagObject.RSSI);
-                            Console.Write("{0}, ", allTagObject.SCDEAvg);
-                            Console.Write("{0}, ", allTagObject.SCDEStdDev);
-                            Console.Write("{0}, ", allTagObject.TimesRead);
-                            Console.Write("{0}, ", allTagObject.TotalSCDEValue);
-                            Console.Write("{0}, ", allTagObject.Lat);
-                            Console.Write("{0}, ", allTagObject.Lon);
-                            Console.Write("{0}, ", allTagObject.freq_TSSI);
-                            Console.Write("{0}, ", allTagObject.freq_SCDE);
-
-                            Console.WriteLine();
-                        }
-
-                        //allTagInformation.TryUpdate(entry.Key, newValues, oldValues);
+                            
                     }
                     else
                     {
                         // Entry not found. Add.
-                        if (entry.Value.TSSI > 0 && entry.Value.SCDE > 0)
+                        if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
                         {
-                            entry.Value.SCDEAvg = entry.Value.SCDE;
-                            entry.Value.TotalSCDEValue = entry.Value.SCDE;
+                            entry.Value.SCDEAvg = entry.Value.SCDEraw;
+                            entry.Value.TotalSCDEValue = entry.Value.SCDEraw;
                             entry.Value.TimesRead = 1;
 
                             this.tagBeep.Play();
@@ -987,75 +1123,120 @@ namespace MSRC
                         else
                         {
                             entry.Value.TSSI = 0;
-                            entry.Value.SCDE = 0;
+                            entry.Value.SCDEraw = 0;
                             entry.Value.SCDEAvg = 0;
                             entry.Value.SCDEStdDev = 0;
                         }
 
+
                         if (DEBUG_VIEW)
                         {
-                            debugDataStream.Write("{0}, ", entry.Value.TSSI);
-                            debugDataStream.Write("{0}, ", entry.Value.SCDE);
-                            debugDataStream.Write("{0}, ", entry.Value.TEMP);
-                            debugDataStream.Write("{0}, ", entry.Value.RSSI);
-                            debugDataStream.Write("{0}, ", entry.Value.SCDEAvg);
-                            debugDataStream.Write("{0}, ", entry.Value.TimesRead);
-                            debugDataStream.Write("{0}, ", entry.Value.TotalSCDEValue);
-                            debugDataStream.Write("{0}, ", entry.Value.Lat);
-                            debugDataStream.Write("{0}, ", entry.Value.Lon);
-                            debugDataStream.Write("{0}, ", entry.Value.freq_TSSI);
-                            debugDataStream.Write("{0}, ", entry.Value.freq_SCDE);
+                            if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
+                            {
+                                debugDataStream.Write("{0}, {1}, {2}, ", DateTime.Now.ToString(), entry.Key, this.currentPowerLevel);
+                                debugDataStream.Write("{0}, ", entry.Value.TSSI);
+                                debugDataStream.Write("{0}, ", entry.Value.RSSI);
+                                debugDataStream.Write("{0}, ", entry.Value.SCDEraw);
+                                debugDataStream.Write("{0}, ", entry.Value.TEMP);
+                                debugDataStream.Write("{0}, ", entry.Value.SCDEAvg);
+                                debugDataStream.Write("{0}, ", entry.Value.TimesRead);
+                                debugDataStream.Write("{0}, ", entry.Value.Lat);
+                                debugDataStream.Write("{0}, ", entry.Value.Lon);
+                                debugDataStream.Write("{0}, ", entry.Value.freq_SCDE);
+                                debugDataStream.WriteLine();
+                                debugDataStream.Flush();
+                            }
 
-                            debugDataStream.WriteLine();
-                            debugDataStream.Flush();
+                        }
+                        else if (readTemperature && readMoisture)
+                        {
+                            if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
+                            {
+                                debugDataStream.Write("{0}, {1}, ", DateTime.Now.ToString(), entry.Key);
+                                debugDataStream.Write("{0}, ", entry.Value.TEMP);
+                                debugDataStream.Write("{0}, ", entry.Value.SCDEraw);
+                                debugDataStream.Write("{0}, ", entry.Value.SCDEAvg);
+                                debugDataStream.Write("{0}, ", entry.Value.TimesRead);
+                                debugDataStream.WriteLine();
+                                debugDataStream.Flush();
+                            }
+                        }
+                        else if (readTemperature && !readMoisture)
+                        {
+                            if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0 && entry.Value.TEMP > 0)
+                            {
+                                debugDataStream.Write("{0}, {1}, ", DateTime.Now.ToString(), entry.Key);
+                                debugDataStream.Write("{0}, ", entry.Value.TEMP);
+                                debugDataStream.WriteLine();
+                                debugDataStream.Flush();
+                            }
+                        }
+                        else if (!readTemperature && readMoisture)
+                        {
+                            if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
+                            {
+                                debugDataStream.Write("{0}, {1}, ", DateTime.Now.ToString(), entry.Key);
+                                debugDataStream.Write("{0}, ", entry.Value.SCDEraw);
+                                debugDataStream.Write("{0}, ", entry.Value.SCDEAvg);
+                                debugDataStream.Write("{0}, ", entry.Value.TimesRead);
+                                debugDataStream.WriteLine();
+                                debugDataStream.Flush();
+                            }
                         }
 
                         if (CONSOLE_DEBUG)
                         {
-                            Console.Write("add: ");
-                            Console.Write("{0}, ", entry.Value.TSSI);
-                            Console.Write("{0}, ", entry.Value.SCDE);
-                            Console.Write("{0}, ", entry.Value.TEMP);
-                            Console.Write("{0}, ", entry.Value.RSSI);
-                            Console.Write("{0}, ", entry.Value.SCDEAvg);
-                            Console.Write("{0}, ", entry.Value.TimesRead);
-                            Console.Write("{0}, ", entry.Value.TotalSCDEValue);
-                            Console.Write("{0}, ", entry.Value.Lat);
-                            Console.Write("{0}, ", entry.Value.Lon);
-                            Console.Write("{0}, ", entry.Value.freq_TSSI);
-                            Console.Write("{0}, ", entry.Value.freq_SCDE);
-
-                            Console.WriteLine();
+                            if (entry.Value.TSSI > 0 && entry.Value.SCDEraw > 0)
+                            {
+                                Console.Write("add: ");
+                                Console.Write("{0}, {1}, {2}, ", DateTime.Now.ToString(), entry.Key, this.currentPowerLevel);
+                                Console.Write("{0}, ", allTagObject.TSSI);
+                                Console.Write("{0}, ", allTagObject.SCDEraw);
+                                Console.Write("{0}, ", allTagObject.TEMP);
+                                Console.Write("{0}, ", allTagObject.RSSI);
+                                Console.Write("{0}, ", allTagObject.SCDEAvg);
+                                Console.Write("{0}, ", allTagObject.TimesRead);
+                                Console.Write("{0}, ", allTagObject.Lat);
+                                Console.Write("{0}, ", allTagObject.Lon);
+                                Console.Write("{0}, ", entry.Value.freq_SCDE);
+                                Console.WriteLine();
+                            }
                         }
 
                         newAllTagInformation.TryAdd(entry.Key, entry.Value);
                     }
+                    
                 }
             }
         }
 
-        private double calculateLLAverage(LinkedList<double> workingList)
+        private double calculateLLAverageSCDE(LinkedList<SCDEDatetime> workingList)
         {
-            LinkedList<double> tempList = new LinkedList<double>();
+            LinkedList<SCDEDatetime> tempList = new LinkedList<SCDEDatetime>();
 
-            foreach(double value in workingList)
+            foreach(SCDEDatetime value in workingList)
                 tempList.AddLast(value);
 
             double average = 0;
 
-            if(tempList.Count > 5)
-            {
-                tempList.Remove(tempList.Max());
-                tempList.Remove(tempList.Max());
+            //if(tempList.Count > 5)
+            //{
+            //    tempList.Remove(tempList.Max());
+            //    tempList.Remove(tempList.Max());
 
-                tempList.Remove(tempList.Min());
-                tempList.Remove(tempList.Min());
+            //    tempList.Remove(tempList.Min());
+            //    tempList.Remove(tempList.Min());
+            //}
+            foreach (SCDEDatetime value in workingList)
+            {
+                if (DateTime.Now.Subtract(value.ReadTime).TotalMinutes > (double)nudTimeAvg.Value && nudTimeAvg.Value != 0)
+                    tempList.Remove(value);
             }
-            
 
-            foreach (double value in tempList)
+
+            foreach (SCDEDatetime value in tempList)
             {
-                average += value;
+                average += value.SCDE;
             }
             average /= tempList.Count;
 
@@ -1063,33 +1244,74 @@ namespace MSRC
             return average;
         }
 
-        private double calculateLLStdDeviation(LinkedList<double> workingList)
+        private double calculateLLAverageTemp(LinkedList<TempDateTime> workingList)
+        {
+            LinkedList<TempDateTime> tempList = new LinkedList<TempDateTime>();
+
+            foreach (TempDateTime value in workingList)
+                tempList.AddLast(value);
+
+            double average = 0;
+
+            //if(tempList.Count > 5)
+            //{
+            //    tempList.Remove(tempList.Max());
+            //    tempList.Remove(tempList.Max());
+
+            //    tempList.Remove(tempList.Min());
+            //    tempList.Remove(tempList.Min());
+            //}
+            foreach (TempDateTime value in workingList)
+            {
+                if (DateTime.Now.Subtract(value.ReadTime).TotalMinutes > (double)nudTimeAvg.Value && nudTimeAvg.Value != 0)
+                    tempList.Remove(value);
+            }
+
+
+            foreach (TempDateTime value in tempList)
+            {
+                average += value.temperature;
+            }
+            average /= tempList.Count;
+
+
+            return average;
+        }
+
+        private double calculateLLStdDeviation(LinkedList<SCDEDatetime> workingList)
         {
             double stdDeviation = 0;
             double average = 0;
-            LinkedList<double> tempList = new LinkedList<double>();
+            LinkedList<SCDEDatetime> tempList = new LinkedList<SCDEDatetime>();
 
             if (workingList.Count > 1)
             {
-                foreach (double value in workingList)
+                foreach (SCDEDatetime value in workingList)
                     tempList.AddLast(value);
 
-                if(tempList.Count > 6)
-                {
-                    tempList.Remove(tempList.Max());
-                    tempList.Remove(tempList.Max());
+                //if(tempList.Count > 6)
+                //{
+                //    tempList.Remove(tempList.Max());
+                //    tempList.Remove(tempList.Max());
 
-                    tempList.Remove(tempList.Min());
-                    tempList.Remove(tempList.Min());
+                //    tempList.Remove(tempList.Min());
+                //    tempList.Remove(tempList.Min());
+                //}
+                foreach (SCDEDatetime value in workingList )
+                {
+                    if(DateTime.Now.Subtract(value.ReadTime).TotalMinutes > (double)nudTimeAvg.Value && nudTimeAvg.Value != 0)
+                    {
+                        tempList.Remove(value);
+                    }
                 }
             
-                foreach (double value in tempList)
-                    average += value;
+                foreach (SCDEDatetime value in tempList)
+                    average += value.SCDE;
 
                 average /= tempList.Count;
 
-                foreach (double value in tempList)
-                    stdDeviation += Math.Pow((value - average), 2);
+                foreach (SCDEDatetime value in tempList)
+                    stdDeviation += Math.Pow((value.SCDE - average), 2);
 
                 stdDeviation = Math.Sqrt(stdDeviation / (double)(tempList.Count - 1));
             }
@@ -1133,14 +1355,29 @@ namespace MSRC
 
                     for (int idx = 0; idx < newAllTagInformation.Count(); idx++)
                     {
-                        if (newAllTagInformation.ElementAt(idx).Value.SCDEAvg >= CEILING_DAMP)
-                            dryTagCount++;
-                        else if (newAllTagInformation.ElementAt(idx).Value.SCDEAvg <= CEILING_WET && newAllTagInformation.ElementAt(idx).Value.SCDEAvg != 0)
-                            wetTagCount++;
-                        else if (newAllTagInformation.ElementAt(idx).Value.SCDEAvg != 0)
-                            dampTagCount++;
+                        if(!valuesFlipped)
+                        {
+                            if (newAllTagInformation.ElementAt(idx).Value.SCDEAvg >= CEILING_DAMP)
+                                dryTagCount++;
+                            else if (newAllTagInformation.ElementAt(idx).Value.SCDEAvg <= CEILING_WET && newAllTagInformation.ElementAt(idx).Value.SCDEAvg != 0)
+                                wetTagCount++;
+                            else if (newAllTagInformation.ElementAt(idx).Value.SCDEAvg != 0)
+                                dampTagCount++;
+                            else
+                                badTagCount++;
+                        }
                         else
-                            badTagCount++;
+                        {
+                            if (newAllTagInformation.ElementAt(idx).Value.SCDEAvg <= CEILING_DAMP && newAllTagInformation.ElementAt(idx).Value.SCDEAvg != 0)
+                                dryTagCount++;
+                            else if (newAllTagInformation.ElementAt(idx).Value.SCDEAvg >= CEILING_WET )
+                                wetTagCount++;
+                            else if (newAllTagInformation.ElementAt(idx).Value.SCDEAvg != 0)
+                                dampTagCount++;
+                            else
+                                badTagCount++;
+                        }
+                        
                     }
 
                     lstTagView.Invoke(new MethodInvoker(delegate
@@ -1189,6 +1426,21 @@ namespace MSRC
                 dryStatus.BackColor = Color.FromArgb(0, 192, 0);
                 Thread.Sleep(1000);
                 dryStatus.BackColor = Color.White;
+            }
+        }
+
+        private void mapDisplayWet()
+        {
+            while (true)
+            {
+                mreDisplayWet.WaitOne();
+                mreDisplayWet.Reset();
+
+                if (programEnding) break;
+
+                wetStatus.BackColor = Color.Red;
+                Thread.Sleep(1000);
+                wetStatus.BackColor = Color.White;
             }
         }
 
@@ -1264,7 +1516,7 @@ namespace MSRC
                 if (DEBUG_VIEW)
                     values = new int[] { TAGINFO_RDCT, TAGINFO_TSSI, TAGINFO_SCDE, TAGINFO_WTDY, TAGINFO_SCAV, TAGINFO_TEMP };
                 else
-                    values = new int[] { TAGINFO_RDCT, TAGINFO_WTDY, TAGINFO_SCAV, TAGINFO_TEMP };
+                    values = new int[] { TAGINFO_RDCT, TAGINFO_WTDY, TAGINFO_SCAV, TAGINFO_TEMP};
 
                 detailedTagList.Clear();
                 detailedTagView.Invoke(new MethodInvoker(delegate { detailedTagView.Items.Clear(); }));
@@ -1307,24 +1559,24 @@ namespace MSRC
                                             detailedTagList[Tags].SubItems.Add(newAllTagInformation.ElementAt(idx).Value.TSSI.ToString());
                                     }
                                         
-                                    if(cbTSSIAvg.Checked && DEBUG_VIEW)
-                                    {
-                                        if (newAllTagInformation.ElementAt(idx).Value.TSSIAvg == 0)
-                                            detailedTagList[Tags].SubItems.Add("-");
-                                        else
-                                        {
-                                            int tssiAvg = (int)newAllTagInformation.ElementAt(idx).Value.TSSIAvg;
-                                            detailedTagList[Tags].SubItems.Add(tssiAvg.ToString());
-                                        }
-                                    }
+                                    //if(cbTSSIAvg.Checked && DEBUG_VIEW)
+                                    //{
+                                    //    if (newAllTagInformation.ElementAt(idx).Value.TSSIAvg == 0)
+                                    //        detailedTagList[Tags].SubItems.Add("-");
+                                    //    else
+                                    //    {
+                                    //        int tssiAvg = (int)newAllTagInformation.ElementAt(idx).Value.TSSIAvg;
+                                    //        detailedTagList[Tags].SubItems.Add(tssiAvg.ToString());
+                                    //    }
+                                    //}
 
                                     if (cbSCDE.Checked && DEBUG_VIEW)
                                     {
-                                        if (newAllTagInformation.ElementAt(idx).Value.SCDE == 0)
+                                        if (newAllTagInformation.ElementAt(idx).Value.SCDEraw == 0)
                                             detailedTagList[Tags].SubItems.Add("-");
                                         else
                                         {
-                                            int SCDEval = (int)newAllTagInformation.ElementAt(idx).Value.SCDE;
+                                            int SCDEval = (int)newAllTagInformation.ElementAt(idx).Value.SCDEraw;
                                             detailedTagList[Tags].SubItems.Add(SCDEval.ToString());
                                         }
                                     }
@@ -1353,16 +1605,32 @@ namespace MSRC
                                     // Wet/Dry indicator
                                     if (cbTS.Checked)
                                     {
+
                                         int scdeAvg = (int)newAllTagInformation.ElementAt(idx).Value.SCDEAvg;
 
-                                        if (scdeAvg == 0)
-                                            detailedTagList[Tags].SubItems.Add("-");
-                                        else if (scdeAvg <= CEILING_WET)
-                                            detailedTagList[Tags].SubItems.Add("WET");
-                                        else if (scdeAvg <= CEILING_DAMP)
-                                            detailedTagList[Tags].SubItems.Add("DAMP");
+                                        if(valuesFlipped)
+                                        {
+                                            if (scdeAvg == 0)
+                                                detailedTagList[Tags].SubItems.Add("-");
+                                            else if (scdeAvg >= CEILING_WET)
+                                                detailedTagList[Tags].SubItems.Add("WET");
+                                            else if (scdeAvg >= CEILING_DAMP)
+                                                detailedTagList[Tags].SubItems.Add("DAMP");
+                                            else
+                                                detailedTagList[Tags].SubItems.Add("DRY");
+                                        }
                                         else
-                                            detailedTagList[Tags].SubItems.Add("DRY");
+                                        {
+                                            if (scdeAvg == 0)
+                                                detailedTagList[Tags].SubItems.Add("-");
+                                            else if (scdeAvg <= CEILING_WET)
+                                                detailedTagList[Tags].SubItems.Add("WET");
+                                            else if (scdeAvg <= CEILING_DAMP)
+                                                detailedTagList[Tags].SubItems.Add("DAMP");
+                                            else
+                                                detailedTagList[Tags].SubItems.Add("DRY");
+                                        }
+                                        
                                     }
 
 
@@ -1383,7 +1651,7 @@ namespace MSRC
                                         if (newAllTagInformation.ElementAt(idx).Value.TEMP == 0)
                                             detailedTagList[Tags].SubItems.Add("-");
                                         else
-                                            detailedTagList[Tags].SubItems.Add(newAllTagInformation.ElementAt(idx).Value.TEMP.ToString());
+                                            detailedTagList[Tags].SubItems.Add(Math.Round(newAllTagInformation.ElementAt(idx).Value.TEMP, 1).ToString());
                                     }
 
 
@@ -1529,9 +1797,24 @@ namespace MSRC
                 Console.WriteLine("TEMP: ");
 
             byte[] data = new byte[8];
+
+            byte[] select = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0x30, 0x00, this.Session, TARGET_A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            Array.Copy(select, 6, data, 0, 8);
+            GetAndDisplayRegisterContents("Set Temperature Query Target", select[5], data);
+
+            Array.Clear(data, 0, 8);
             byte[] sensorCode = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0xe2, 0x00, (Byte)this.tagModel, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x88, 0xd4 };
             Array.Copy(sensorCode, 6, data, 0, 8);
             GetAndDisplayAccessCommandResults(sensorCode[5], data);
+
+            select[8] = TARGET_B;
+            Array.Copy(select, 6, data, 0, 8);
+            GetAndDisplayRegisterContents("Set Temp Calib Data Query Target", select[5], data);
+
+            Array.Clear(data, 0, 8);
+            byte[] calibrationCode = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0x41, 0x03, 0x08, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x88, 0xd4 };
+            Array.Copy(calibrationCode, 6, data, 0, 8);
+            GetAndDisplayAccessCommandResults(calibrationCode[5], data);
         }
 
         private void ChangePower(int powerIndex, int antenna)
@@ -1556,7 +1839,7 @@ namespace MSRC
             byte[] setSingleFrequencyCommand = { 0x43, 0x49, 0x54, 0x4d, 0xff, 0x82, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3d, 0x91 };
             byte[] data = new byte[8];
 
-            int frequency = this.frequencyTable[frequencyIndex];
+            int frequency = this.countryFrequencyMap[region][frequencyIndex];
 
             setSingleFrequencyCommand[7] = (Byte)(frequency & 0x00FF);
             setSingleFrequencyCommand[8] = (Byte)((frequency >> 8) & 0x00FF);
@@ -1647,21 +1930,27 @@ namespace MSRC
                 Console.WriteLine("error getting register content " + ex);
             }
 
-            switch (data[0])
+            if (command == 0x41) // Read tag data
+                dataType = "CALIB";
+            else
             {
-                case 0x00:
-                    dataType = "TEMP";
-                    break;
-                case 0x01:
-                    dataType = "TSSI";
-                    break;
-                case 0x02:
-                    dataType = "SCDE";
-                    break;
-                default:
-                    dataType = "OTHR";
-                    break;
+                switch (data[0])
+                {
+                    case 0x00:
+                        dataType = "TEMP";
+                        break;
+                    case 0x01:
+                        dataType = "TSSI";
+                        break;
+                    case 0x02:
+                        dataType = "SCDE";
+                        break;
+                    default:
+                        dataType = "OTHR";
+                        break;
+                }
             }
+
             try
             {
                 while (registerContents[0] != 'E')
@@ -1756,14 +2045,60 @@ namespace MSRC
                                         if (dataType == "TEMP")
                                         {
                                             //tagInformation[EPC][TAGINFO_TEMP] = value / 100; //data not currently be collected, but this may be wanted in the future so I'm leaving room for it.
-                                            newTagInformation[EPC].TEMP = value / 100;
+                                            if (calibrationData.ContainsKey(EPC))
+                                            {
+                                                newTagInformation[EPC].TEMP = value;
+                                                double code1 = (double)((calibrationData[EPC] >> 36) & 0x0FFF);
+                                                double temp1 = (double)((calibrationData[EPC] >> 25) & 0x07ff);
+                                                double code2 = (double)((calibrationData[EPC] >> 13) & 0x0fff);
+                                                double temp2 = (double)((calibrationData[EPC] >> 2) & 0x07ff);
+
+                                                if (newTagInformation[EPC].TEMP != 0.0)
+                                                    newTagInformation[EPC].TEMP = 0.1 * (((temp2 - temp1) / (code2 - code1)) * (newTagInformation[EPC].TEMP - code1) + temp1 - 800.0);
+
+                                            }
+
+                                        }
+                                        else if (dataType == "CALIB")
+                                        {
+
+                                            if (!calibrationData.ContainsKey(EPC))
+                                            {
+                                                UInt64 calibData = 0;
+                                                for (int idx = 28; idx < 34; idx++)
+                                                    calibData = (calibData * 256) + (UInt64)(registerContents[idx] & 0x000000FF);
+                                                if (calibData != 0)
+                                                    calibrationData.Add(EPC, calibData);
+                                            }
+                                            
+                                            
+
+                                            //if (calibData != 0)
+                                            //{
+                                            //    double Code1 = (double)((calibData >> 36) & 0x0FFF);
+                                            //    double Temp1 = (double)((calibData >> 25) & 0x07FF);
+                                            //    double Code2 = (double)((calibData >> 13) & 0x0FFF);
+                                            //    double Temp2 = (double)((calibData >> 2) & 0x07FF);
+
+                                            //    if (newTagInformation[EPC].TEMP != 0.0)
+                                            //        newTagInformation[EPC].TEMP = 0.1 * (((Temp2 - Temp1) / (Code2 - Code1)) * (newTagInformation[EPC].TEMP - Code1) + Temp1 - 800.0);
+                                            //}
+                                            //else
+                                            //{
+                                            //    Console.WriteLine("=========> Calibration data not read correctly.");
+                                            //    if (newTagInformation[EPC].TEMP != 0 && newTagInformation[EPC].TEMP != 9)
+                                            //        newTagInformation[EPC].TEMP = 0;
+
+                                            //}
+                                                
+                                             
                                         }
                                         else if (dataType == "SCDE")
                                         {
                                             if ((newTagInformation[EPC].TSSI >= TSSI_MIN) && (newTagInformation[EPC].TSSI <= TSSI_MAX))
                                             {
-                                                if (tagModel == TagModel.Magnus2)
-                                                    value = value << 4;
+                                                //if (tagModel == TagModel.Magnus2)
+                                                //    value = value << 4;
 
                                                 //tagInformation[EPC][TAGINFO_SCDE] = value; //SCDE value
                                                 //tagInformation[EPC][TAGINFO_CUMM] += value; //Total SCDE Value for Average
@@ -1773,7 +2108,7 @@ namespace MSRC
 
                                                 if (newTagInformation[EPC].SCDEraw != 0)
                                                 {
-                                                    newTagInformation[EPC].SCDE = calculateFreqCorrection(newTagInformation[EPC]);
+                                                    //newTagInformation[EPC].SCDE = SCDEraw);
                                                     newTagInformation[EPC].TotalSCDEValue += value;
                                                     newTagInformation[EPC].TimesRead++;        //tagInformation[EPC][TAGINFO_SCAV] = (int)(tagInformation[EPC][TAGINFO_CUMM] / tagInformation[EPC][5]); //Average Value for SCDE
 
@@ -1788,8 +2123,8 @@ namespace MSRC
                                                     }
                                                     else
                                                     {
-                                                        //tagInformation[EPC][TAGINFO_SCAV] = value * k + tagInformation[EPC][TAGINFO_SCAV] * (1.0 - k);
-                                                        newTagInformation[EPC].SCDEAvg = value * k + newTagInformation[EPC].SCDEAvg * (1.0 - k);
+                                                        // newTagInformation[EPC].SCDEAvg = value * k + tagInformation[EPC][TAGINFO_SCAV] * (1.0 - k);
+                                                        newTagInformation[EPC].SCDEAvg = newTagInformation[EPC].TotalSCDEValue/newTagInformation[EPC].TimesRead;
                                                     }
                                                         
 
@@ -1797,13 +2132,24 @@ namespace MSRC
                                                 }
 
                                                 moistureStatus.BackColor = Color.FromArgb(0, 192, 0);
-
-                                                if (newTagInformation[EPC].SCDEAvg < CEILING_WET && newTagInformation[EPC].SCDEAvg != 0)
-                                                    mreDisplayWet.Set();
-                                                else if (newTagInformation[EPC].SCDEAvg > CEILING_DAMP)
-                                                    mreDisplayDry.Set();
+                                                if(!valuesFlipped)
+                                                {
+                                                    if (newTagInformation[EPC].SCDEAvg < CEILING_WET && newTagInformation[EPC].SCDEAvg != 0)
+                                                        mreDisplayWet.Set();
+                                                    else if (newTagInformation[EPC].SCDEAvg > CEILING_DAMP)
+                                                        mreDisplayDry.Set();
+                                                    else
+                                                        mreDisplayDamp.Set();
+                                                }
                                                 else
-                                                    mreDisplayDamp.Set();
+                                                {
+                                                    if (newTagInformation[EPC].SCDEAvg > CEILING_WET )
+                                                        mreDisplayWet.Set();
+                                                    else if (newTagInformation[EPC].SCDEAvg < CEILING_DAMP && newTagInformation[EPC].SCDEAvg != 0)
+                                                        mreDisplayDry.Set();
+                                                    else
+                                                        mreDisplayDamp.Set();
+                                                }
                                             }
                                         }
                                         else
@@ -1900,7 +2246,7 @@ namespace MSRC
                         if (!exists || newSession)
                         {
                             SQLCommand = @"INSERT INTO TagInfoTable (ScanTableID, EPC, TSSI, SCDE, Temperature, RSSI, SCDEAvg, TimesRead, TotalSCDEValue, Latitude, Longitude) 
-                                                                    VALUES ( " + currentTagList + ", '" + EPC + "', " + newTagInformation[EPC].TSSI + ", " + newTagInformation[EPC].SCDE + ", " + newTagInformation[EPC].TEMP + ", " +
+                                                                    VALUES ( " + currentTagList + ", '" + EPC + "', " + newTagInformation[EPC].TSSI + ", " + newTagInformation[EPC].SCDEraw + ", " + newTagInformation[EPC].TEMP + ", " +
                             newTagInformation[EPC].RSSI + ", " + newTagInformation[EPC].SCDEAvg + ", " + newTagInformation[EPC].TimesRead + ", " + newTagInformation[EPC].TotalSCDEValue + ", " +
                             newTagInformation[EPC].Lat + ", " + newTagInformation[EPC].Lon + ")";
 
@@ -1918,7 +2264,7 @@ namespace MSRC
                         {
                             SQLCommand = @"UPDATE TagInfoTable 
                                                                 SET TSSI = " + newTagInformation[EPC].TSSI + ", " + "SCDE = " +
-                            newTagInformation[EPC].SCDE + ", Temperature = " + newTagInformation[EPC].TEMP +
+                            newTagInformation[EPC].SCDEraw + ", Temperature = " + newTagInformation[EPC].TEMP +
                             ", RSSI = " + newTagInformation[EPC].RSSI + ", SCDEAvg = " + newTagInformation[EPC].SCDEAvg +
                             ", TimesRead = " + newTagInformation[EPC].TimesRead + ", TotalSCDEValue = " +
                             newTagInformation[EPC].TotalSCDEValue + ", Latitude = '" + newTagInformation[EPC].Lat + "', Longitude = '" +
@@ -2169,13 +2515,7 @@ namespace MSRC
             else
                 detailedTagView.Columns.Insert(idx++, colTSSI);
 
-            if (!cbTSSIAvg.Checked)
-                detailedTagView.Columns.Remove(colTSSIAvg);
-            else if (detailedTagView.Columns.Contains(colTSSIAvg))
-                idx++;
-            else
-                detailedTagView.Columns.Insert(idx++, colTSSIAvg);
-
+            
             if (!cbSCDE.Checked)
                 detailedTagView.Columns.Remove(colSCDE);
             else if (detailedTagView.Columns.Contains(colSCDE))
@@ -2223,12 +2563,12 @@ namespace MSRC
             if (this.starting)
                 return;
 
-            if (cbxMaxPower.SelectedIndex > cbxMinPower.SelectedIndex) // if the index is higher the number is lower so we flag this as an error to user
+            if (cbxMaxPower.SelectedIndex > cbxMinPower.SelectedIndex && !starting) // if the index is higher the number is lower so we flag this as an error to user
             {
                 MessageBox.Show("Maximum cannot be less than the minimum power level", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 cbxMinPower.SelectedIndex = cbxMaxPower.SelectedIndex;
             }
-
+            
             Properties.Settings.Default.PowerMaxIndex = cbxMaxPower.SelectedIndex;
             Properties.Settings.Default.Save();
         }
@@ -2283,6 +2623,12 @@ namespace MSRC
             if (radMagnusS2.Checked)
             {
                 tagModel = TagModel.Magnus2;
+                if(!DEBUG_VIEW)
+                {
+                    cbTempEnable.Checked = false;
+                    cbTempEnable.Visible = false;
+                }
+
                 Properties.Settings.Default.TagType = (int)TagModel.Magnus2;
                 Properties.Settings.Default.Save();
             }
@@ -2293,6 +2639,8 @@ namespace MSRC
             if (radMagnusS3.Checked)
             {
                 tagModel = TagModel.Magnus3;
+                if(!DEBUG_VIEW)
+                    cbTempEnable.Visible = true;
                 Properties.Settings.Default.TagType = (int)TagModel.Magnus3;
                 Properties.Settings.Default.Save();
             }
@@ -2316,50 +2664,65 @@ namespace MSRC
 
         private void cbTR_CheckedChanged(object sender, EventArgs e)
         {
-            Properties.Settings.Default.TimesRead = cbTR.Checked;
-            Properties.Settings.Default.Save();
+            if(DEBUG_VIEW)
+            {
+                Properties.Settings.Default.TimesRead = cbTR.Checked;
+                Properties.Settings.Default.Save();
+            }       
         }
 
         private void cbTSSI_CheckedChanged(object sender, EventArgs e)
         {
-            Properties.Settings.Default.TSSI = cbTSSI.Checked;
-            Properties.Settings.Default.Save();
-        }
-
-        private void cbTSSIAvg_CheckedChanged(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.TSSIAvg = cbTSSIAvg.Checked;
-            Properties.Settings.Default.Save();
+            if(DEBUG_VIEW)
+            {
+                Properties.Settings.Default.TSSI = cbTSSI.Checked;
+                Properties.Settings.Default.Save();
+            }
         }
 
         private void cbSCDE_CheckedChanged(object sender, EventArgs e)
         {
-            Properties.Settings.Default.SCDE = cbSCDE.Checked;
-            Properties.Settings.Default.Save();
+            if(DEBUG_VIEW)
+            {
+                Properties.Settings.Default.SCDE = cbSCDE.Checked;
+                Properties.Settings.Default.Save();
+            }
         }
 
         private void SCDEAvg_CheckedChanged(object sender, EventArgs e)
         {
-            Properties.Settings.Default.SCDEAvg = cbSCDEAvg.Checked;
-            Properties.Settings.Default.Save();
+            if (DEBUG_VIEW)
+            {
+                Properties.Settings.Default.SCDEAvg = cbSCDEAvg.Checked;
+                Properties.Settings.Default.Save();
+            }
         }
 
         private void cbSTdDev_CheckedChanged(object sender, EventArgs e)
         {
-            Properties.Settings.Default.StdDev = cbSTdDev.Checked;
-            Properties.Settings.Default.Save();
+            if (DEBUG_VIEW)
+            {
+                Properties.Settings.Default.StdDev = cbSTdDev.Checked;
+                Properties.Settings.Default.Save();
+            }
         }
 
         private void cbTS_CheckedChanged(object sender, EventArgs e)
         {
-            Properties.Settings.Default.TagState = cbTS.Checked;
-            Properties.Settings.Default.Save();
+            if (DEBUG_VIEW)
+            {
+                Properties.Settings.Default.TagState = cbTS.Checked;
+                Properties.Settings.Default.Save();
+            }
         }
 
         private void cbTemp_CheckedChanged(object sender, EventArgs e)
         {
-            Properties.Settings.Default.Temperature = cbTemp.Checked;
-            Properties.Settings.Default.Save();
+            if (DEBUG_VIEW)
+            {
+                Properties.Settings.Default.Temperature = cbTemp.Checked;
+                Properties.Settings.Default.Save();
+            }
         }
 
         private void detailedTagView_KeyDown(object sender, KeyEventArgs e)
@@ -2411,15 +2774,75 @@ namespace MSRC
 
             Clipboard.SetText(buffer.ToString());
         }
+
+        private void nudDThresh_ValueChanged(object sender, EventArgs e)
+        {
+            CEILING_DAMP = (int)nudDThresh.Value;
+
+            valuesFlipped = (CEILING_DAMP < CEILING_WET);
+
+            Properties.Settings.Default.DryThreshold = (int)nudDThresh.Value;
+            Properties.Settings.Default.Save();
+        }
+
+        private void nudWThresh_ValueChanged(object sender, EventArgs e)
+        {
+            CEILING_WET = (int)nudWThresh.Value;
+
+            valuesFlipped = (CEILING_DAMP < CEILING_WET);
+
+            Properties.Settings.Default.WetThreshold = (int)nudWThresh.Value;
+            Properties.Settings.Default.Save();
+        }
+
+        private void cbxCountry_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            region = cbxCountry.SelectedItem.ToString();
+            Properties.Settings.Default.Region = cbxCountry.SelectedItem.ToString();
+            Properties.Settings.Default.Save();
+        }
+
+        private void cbMoistureEnable_CheckedChanged(object sender, EventArgs e)
+        {
+            readMoisture = cbMoistureEnable.Checked;
+            //If both have been disselected reselect the one that was already deselected
+            if (!readMoisture && !readTemperature)
+            {
+                if (!radMagnusS2.Checked)
+                    cbTempEnable.Checked = true;
+                else
+                    cbMoistureEnable.Checked = true;
+            }
+               
+            Properties.Settings.Default["readMoisture"] = readMoisture;
+            Properties.Settings.Default.Save();
+        }
+
+        private void cbTempEnable_CheckedChanged(object sender, EventArgs e)
+        {
+            readTemperature = cbTempEnable.Checked;
+            //If both have been disselected reselect the one that was already deselected
+            if (!readMoisture && !readTemperature)
+                cbMoistureEnable.Checked = true;
+            Properties.Settings.Default["readTemp"] = readTemperature;
+            Properties.Settings.Default.Save();
+        }
+
+        private void nudTimeAvg_ValueChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default["AvgTime"] = (int)nudTimeAvg.Value;
+            Properties.Settings.Default.Save();
+        }
     }
 }
 
 public class TagObject
 {
-    public double TSSI, TSSIAvg, SCDE, SCDEraw, SCDEAvg, TEMP, RSSI, SCDEStdDev, TimesRead, TotalSCDEValue, Lat, Lon, freq_TSSI, freq_SCDE;
+    public double TSSI, SCDEraw, SCDEAvg, TEMP, RSSI, SCDEStdDev, TimesRead, TotalSCDEValue, Lat, Lon, freq_TSSI, freq_SCDE;
     public double FreqCorNumerator, FreqCorDenominator, PowerCorDenominator, MidFreq;
-    public LinkedList<double> SCDEValues;
-    public LinkedList<double> TSSIValues;
+    public LinkedList<SCDEDatetime> SCDEValues;
+    public LinkedList<TempDateTime> TempValues;
+    //public LinkedList<TSSIDatetime> TSSIValues;
 
 
      
@@ -2427,8 +2850,8 @@ public class TagObject
     public TagObject()
     {
         this.TSSI           = 0;
-        this.TSSIAvg        = 0;
-        this.SCDE           = 0;
+        //this.TSSIAvg        = 0;
+        this.SCDEraw        = 0;
         this.TEMP           = 0;
         this.RSSI           = 0;
         this.SCDEAvg        = 0;
@@ -2443,54 +2866,31 @@ public class TagObject
         this.FreqCorDenominator = 11500;
         this.PowerCorDenominator = 325;
         this.MidFreq = 913250;
-        this.SCDEValues     = new LinkedList<double>();
-        this.TSSIValues     = new LinkedList<double>();
+        this.SCDEValues     = new LinkedList<SCDEDatetime>();
+        this.TempValues     = new LinkedList<TempDateTime>();
+        //this.TSSIValues     = new LinkedList<TSSIDatetime>();
     }
 }
-public class ProgressBarEx : ProgressBar
+public class SCDEDatetime
 {
-    private SolidBrush brush = null;
+    public double SCDE;
+    public DateTime ReadTime;
 
-    public ProgressBarEx()
+    public SCDEDatetime(double SCDEarg, DateTime ReadTimearg)
     {
-        this.SetStyle(ControlStyles.UserPaint, true);
-    }
-
-    protected override void OnPaint(PaintEventArgs e)
-    {
-        if (brush == null || brush.Color != this.ForeColor)
-            brush = new SolidBrush(this.ForeColor);
-
-        Rectangle rec = new Rectangle(0, 0, this.Width, this.Height);
-        if (ProgressBarRenderer.IsSupported)
-            ProgressBarRenderer.DrawHorizontalBar(e.Graphics, rec);
-        rec.Width = (int)(rec.Width * ((double)Value / Maximum)) - 4;
-        rec.Height = rec.Height - 4;
-        e.Graphics.FillRectangle(brush, 2, 2, rec.Width, rec.Height);
+        this.SCDE = SCDEarg;
+        this.ReadTime = ReadTimearg;
     }
 }
 
-public class GridLayout
+public class TempDateTime
 {
+    public double temperature;
+    public DateTime ReadTime;
 
-    public int numOfCells;
-    public int cellSize;
-
-    private void PictureBox1_Paint(object sender, PaintEventArgs e)
+    public TempDateTime(double temperaturearg, DateTime ReadTimearg)
     {
-        Graphics g = e.Graphics;
-        numOfCells = 200;
-        cellSize = 5;
-        Pen p = new Pen(Color.Black);
-
-        for (int y = 0; y < numOfCells; ++y)
-        {
-            g.DrawLine(p, 0, y * cellSize, numOfCells * cellSize, y * cellSize);
-        }
-
-        for (int x = 0; x < numOfCells; ++x)
-        {
-            g.DrawLine(p, x * cellSize, 0, x * cellSize, numOfCells * cellSize);
-        }
+        this.temperature = temperaturearg;
+        this.ReadTime = ReadTimearg;
     }
 }

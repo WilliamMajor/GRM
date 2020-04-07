@@ -27,10 +27,10 @@
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="TssiMinIndex" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">26</Value>
+      <Value Profile="(Default)">3</Value>
     </Setting>
     <Setting Name="TssiMaxIndex" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">21</Value>
     </Setting>
     <Setting Name="TagType" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2</Value>
@@ -58,6 +58,24 @@
     </Setting>
     <Setting Name="Temperature" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DryThreshold" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">300</Value>
+    </Setting>
+    <Setting Name="WetThreshold" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">100</Value>
+    </Setting>
+    <Setting Name="Region" Type="System.String" Scope="User">
+      <Value Profile="(Default)">USA</Value>
+    </Setting>
+    <Setting Name="ReadMoisture" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ReadTemp" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="AvgTime" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">60</Value>
     </Setting>
   </Settings>
 </SettingsFile>

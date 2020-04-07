@@ -1,12 +1,8 @@
 ﻿using RFID.Notifications;
-using RFID.RFIDEngineeringReader;
-using AsyncRFIDReader;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.IO;
@@ -65,10 +61,9 @@ namespace GRM
         private const int SENSOR_CODE_MIN = 5;
         private const int SENSOR_CODE_MAX = 28;
 
-        RFIDEngineeringReader reader = null;
+        static RFIDEngineeringReader reader = null;
         HeartbeatListener heartbeatListener = null;
-        Dictionary<string, string[]> currentReaders = null;
-        Dictionary<string, string[]> companyInformation = null;
+        static Dictionary<string, string[]> currentReaders = null;
         //ConcurrentDictionary<string, double[]> allTagInformation = null;
         ConcurrentDictionary<string, TagObject> newAllTagInformation = null;
         //Dictionary<string, double[]> tagInformation = null;
@@ -77,7 +72,7 @@ namespace GRM
 
         Thread findTagsThread = null;
 
-        private System.Threading.Timer readTimeTimer;
+        //private System.Threading.Timer readTimeTimer;
 
         private ManualResetEvent mreFind = new ManualResetEvent(false);
 
@@ -88,17 +83,16 @@ namespace GRM
         bool currentlyReading = false;
         bool goodTSSI = false;
         bool programEnding = false;
-        bool readerConnected = false;
-        string tagListFileName = "taglist.bin";
-        string companyFileName = "companyList.bin";
-        string connectedReaderMAC = Properties.Settings.Default["MACAddress"].ToString();
-        string readerType = " ";
+        //bool readerConnected = false;
+        //string tagListFileName = "taglist.bin";
+        //string companyFileName = "companyList.bin";
+        static string connectedReaderMAC = Properties.Settings.Default["MACAddress"].ToString();
+        static string readerType = " ";
 
 
         string debugFileName = "debug.csv";
         StreamWriter debugDataStream = null;
 
-        bool starting = true;
 
         public GRM()
         {
@@ -115,7 +109,7 @@ namespace GRM
             heartbeatListener = new HeartbeatListener();
             currentReaders = new Dictionary<string, string[]>();
 
-            this.readTimeTimer = new System.Threading.Timer(ReadTimeTimer_Tick, null, System.Threading.Timeout.Infinite, 1000);
+            //this.readTimeTimer = new System.Threading.Timer(ReadTimeTimer_Tick, null, System.Threading.Timeout.Infinite, 1000);
 
             //Dictionary arrays: (TSSI, SCDE, TEMP, RSSI, SCDE Average, Times Read, Total SCDE Values)
             newAllTagInformation = new ConcurrentDictionary<string, TagObject>();
@@ -155,14 +149,18 @@ namespace GRM
 
         //Buttons & Console Actions///////////////////////////////////////////////////////////////////////////////////////
 
-         void Main(string[] args)
+        static void Main(string[] args)
+        {
+            setupReader(args);
+        }
+
+        public static void setupReader(string[] args)
         {
             connectedReaderMAC = args[1];
             readerType = currentReaders[connectedReaderMAC][6];
 
             String readerName = currentReaders[connectedReaderMAC][0];
             reader = new RFIDEngineeringReader(currentReaders[connectedReaderMAC][1], 5000);
-            readerConnected = true;
         }
 
 

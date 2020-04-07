@@ -1,2 +1,2 @@
-
-Code base for GRM RFID Portion
+# MSRC2
+Generic version of the MSRC Console

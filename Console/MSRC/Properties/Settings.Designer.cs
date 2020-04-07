@@ -121,7 +121,7 @@ namespace MSRC.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("26")]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
         public int TssiMinIndex {
             get {
                 return ((int)(this["TssiMinIndex"]));
@@ -133,7 +133,7 @@ namespace MSRC.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("21")]
         public int TssiMaxIndex {
             get {
                 return ((int)(this["TssiMaxIndex"]));
@@ -248,6 +248,78 @@ namespace MSRC.Properties {
             }
             set {
                 this["Temperature"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("300")]
+        public int DryThreshold {
+            get {
+                return ((int)(this["DryThreshold"]));
+            }
+            set {
+                this["DryThreshold"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public int WetThreshold {
+            get {
+                return ((int)(this["WetThreshold"]));
+            }
+            set {
+                this["WetThreshold"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("USA")]
+        public string Region {
+            get {
+                return ((string)(this["Region"]));
+            }
+            set {
+                this["Region"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ReadMoisture {
+            get {
+                return ((bool)(this["ReadMoisture"]));
+            }
+            set {
+                this["ReadMoisture"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ReadTemp {
+            get {
+                return ((bool)(this["ReadTemp"]));
+            }
+            set {
+                this["ReadTemp"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("60")]
+        public int AvgTime {
+            get {
+                return ((int)(this["AvgTime"]));
+            }
+            set {
+                this["AvgTime"] = value;
             }
         }
     }
