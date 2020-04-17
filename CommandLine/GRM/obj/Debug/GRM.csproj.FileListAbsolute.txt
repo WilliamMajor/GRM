@@ -4,8 +4,6 @@ D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\bin\Debug\GRM.exe.co
 D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\bin\Debug\GRM.exe
 D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\bin\Debug\GRM.pdb
 D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\bin\Debug\RFID.dll
-D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\bin\Debug\System.Data.SQLite.xml
-D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\bin\Debug\System.Data.SQLite.dll.config
 D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\obj\Debug\GRM.csproj.CopyComplete
 D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\obj\Debug\GRM.exe
 D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\obj\Debug\GRM.pdb

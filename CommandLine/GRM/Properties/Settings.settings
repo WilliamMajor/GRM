@@ -5,7 +5,7 @@
     <Setting Name="IPAddress" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="MACADress" Type="System.String" Scope="User">
+    <Setting Name="MACAddress" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="TagType" Type="System.Int32" Scope="User">

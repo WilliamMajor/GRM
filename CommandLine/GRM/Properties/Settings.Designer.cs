@@ -38,12 +38,12 @@ namespace GRM.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string MACADress {
+        public string MACAddress {
             get {
-                return ((string)(this["MACADress"]));
+                return ((string)(this["MACAddress"]));
             }
             set {
-                this["MACADress"] = value;
+                this["MACAddress"] = value;
             }
         }
         
