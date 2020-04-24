@@ -17,3 +17,7 @@ D:/Documents/School/Senior Project/Code/GRM/CommandLine/GRM/obj/Debug/GRM.pdb
 /home/pi/Documents/GRM/CommandLine/GRM/obj/Debug/GRM.csproj.CopyComplete
 /home/pi/Documents/GRM/CommandLine/GRM/obj/Debug/GRM.exe
 /home/pi/Documents/GRM/CommandLine/GRM/obj/Debug/GRM.pdb
+D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\obj\Debug\GRM.csprojAssemblyReference.cache
+D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\obj\Debug\GRM.csproj.CoreCompileInputs.cache
+D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\obj\Debug\GRM.exe
+D:\Documents\School\Senior Project\Code\GRM\CommandLine\GRM\obj\Debug\GRM.pdb
