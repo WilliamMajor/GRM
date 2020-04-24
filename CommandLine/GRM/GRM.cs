@@ -128,7 +128,7 @@ namespace GRM
             findTagsThread.Start();
             controlThread.Start();
 
-            tagModel = (TagModel)Properties.Settings.Default.TagType;
+            tagModel = TagModel.Magnus3;
 
 
 
