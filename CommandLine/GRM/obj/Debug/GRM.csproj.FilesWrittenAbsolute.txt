@@ -1,0 +1,10 @@
+/home/pi/Documents/GRM/CommandLine/GRM/obj/Debug/.NETFramework,Version=v4.6.1.AssemblyAttribute.cs
+/home/pi/Documents/GRM/CommandLine/GRM/bin/Debug/GRM.exe.config
+/home/pi/Documents/GRM/CommandLine/GRM/bin/Debug/GRM.pdb
+/home/pi/Documents/GRM/CommandLine/GRM/bin/Debug/GRM.exe
+/home/pi/Documents/GRM/CommandLine/GRM/obj/Debug/GRM.exe
+/home/pi/Documents/GRM/CommandLine/GRM/obj/Debug/GRM.pdb
+/home/pi/Documents/GRM/CommandLine/GRM/bin/Debug/RFID.dll
+/home/pi/Documents/GRM/CommandLine/GRM/bin/Debug/System.Data.SQLite.dll
+/home/pi/Documents/GRM/CommandLine/GRM/bin/Debug/System.Data.SQLite.EF6.dll
+/home/pi/Documents/GRM/CommandLine/GRM/bin/Debug/System.Data.SQLite.Linq.dll
