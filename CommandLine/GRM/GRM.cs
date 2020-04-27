@@ -1,7 +1,7 @@
 ﻿using RFID.Notifications;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+//using System.Linq;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.IO;
@@ -128,7 +128,7 @@ namespace GRM
             findTagsThread.Start();
             controlThread.Start();
 
-            tagModel = (TagModel)Properties.Settings.Default.TagType;
+            tagModel = TagModel.Magnus3;
 
 
 
@@ -518,14 +518,6 @@ namespace GRM
 
             double average = 0;
 
-            if (tempList.Count > 5)
-            {
-                tempList.Remove(tempList.Max());
-                tempList.Remove(tempList.Max());
-
-                tempList.Remove(tempList.Min());
-                tempList.Remove(tempList.Min());
-            }
 
 
             foreach (double value in tempList)
@@ -549,14 +541,14 @@ namespace GRM
                 foreach (double value in workingList)
                     tempList.AddLast(value);
 
-                if (tempList.Count > 6)
-                {
-                    tempList.Remove(tempList.Max());
-                    tempList.Remove(tempList.Max());
+                //if (tempList.Count > 6)
+                //{
+                //    tempList.Remove(tempList.Max());
+                //    tempList.Remove(tempList.Max());
 
-                    tempList.Remove(tempList.Min());
-                    tempList.Remove(tempList.Min());
-                }
+                //    tempList.Remove(tempList.Min());
+                //    tempList.Remove(tempList.Min());
+                //}
 
                 foreach (double value in tempList)
                     average += value;
