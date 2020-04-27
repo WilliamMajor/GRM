@@ -1,20 +1,26 @@
 import RPi.GPIO as GPIO          
 from time import sleep
-
-in1 = 24
-in2 = 23
-en = 25
+#RIGHT WHEEL GPIO 
+en1 = 25 #right back enable
+in1 = 26 #right back wheel (+) input
+in2 = 23 #right back wheel (-) input
+en2 = 27 #right front enable
+in3 = 16 #right front wheel (+) input
+in4 = 17 #right front wheel (-) input
 temp1=1
+#LEFT WHEEL GPIO
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(in1,GPIO.OUT)
 GPIO.setup(in2,GPIO.OUT)
-GPIO.setup(en,GPIO.OUT)
+GPIO.setup(in3,GPIO.OUT)
+GPIO.setup(in4,GPIO.OUT)
+GPIO.setup(en1,GPIO.OUT)
 GPIO.output(in1,GPIO.LOW)
 GPIO.output(in2,GPIO.LOW)
-p=GPIO.PWM(en,1000)
+p=GPIO.PWM(en1,1000)
 
-p.start(25)
+p.start(10)
 print("\n")
 print("r-run s-stop f-forward b-backward l-low m-medium h-high e-exit")
 print("\n")    
