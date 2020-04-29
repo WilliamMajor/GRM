@@ -9,23 +9,50 @@ in3 = 16 #right front wheel (+) input
 in4 = 17 #right front wheel (-) input
 temp1=1
 #LEFT WHEEL GPIO
+en3 = 12
+in5 = 14
+in6 = 15
+en4 = 13
+in7 = 8
+in8 = 7
 
 GPIO.setmode(GPIO.BCM)
+#right wheel setup
 GPIO.setup(in1,GPIO.OUT)
 GPIO.setup(in2,GPIO.OUT)
 GPIO.setup(in3,GPIO.OUT)
 GPIO.setup(in4,GPIO.OUT)
 GPIO.setup(en1,GPIO.OUT) #ena
 GPIO.setup(en2,GPIO.OUT) #enb
+#left wheel setup
+GPIO.setup(in5,GPIO.OUT)
+GPIO.setup(in6,GPIO.OUT)
+GPIO.setup(in7,GPIO.OUT)
+GPIO.setup(in8,GPIO.OUT)
+GPIO.setup(en3,GPIO.OUT) #ena
+GPIO.setup(en4,GPIO.OUT) #enb
+
+#initialize wheels to not move
 GPIO.output(in1,GPIO.LOW)
 GPIO.output(in2,GPIO.LOW)
 GPIO.output(in3,GPIO.LOW)
 GPIO.output(in4,GPIO.LOW)
-p=GPIO.PWM(en1,1000)
-p2 = GPIO.PWM(en2, 1000)
+GPIO.output(in5,GPIO.LOW)
+GPIO.output(in6,GPIO.LOW)
+GPIO.output(in7,GPIO.LOW)
+GPIO.output(in8,GPIO.LOW)
+#create PWM signals on enable pins
+p=GPIO.PWM(en1,1000)#back right motor pwm signal
+p2 = GPIO.PWM(en2, 1000)#front right motor pwm signal
+p3 = GPIO.PWM(en3, 1000)#back left motor pwm signal
+p4 = GPIO.PWM(en4, 1000)#front left motor pwm signal
 
-p.start(30)
-p2.start(30)
+#start PWM with given duty cycle
+p.start(90) 
+p2.start(90)
+p3.start(90)
+p4.start(90)
+
 print("\n")
 print("r-run s-stop f-forward b-backward l-low m-medium h-high e-exit")
 print("\n")    
