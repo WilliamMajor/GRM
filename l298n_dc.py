@@ -96,8 +96,6 @@ while(1):
     
     elif x=='e':
         GPIO.cleanup()
-        p.stop()
-        p2.stop()
         print("GPIO Clean up")
         break
     
