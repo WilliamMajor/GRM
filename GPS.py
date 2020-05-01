@@ -26,6 +26,6 @@ while True:
                 data = data.split(',')
                 longitude = data[0]
                 latitude = data[1]
-    time.sleep(1)
+    time.sleep(0.2)
 
 ssh.close()
