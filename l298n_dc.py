@@ -85,9 +85,51 @@ def start_dc1():
     p2.ChangeDutyCycle(start_dc)
     p3.ChangeDutyCycle(start_dc)
     p4.ChangeDutyCycle(start_dc)
+def forward():
+    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.HIGH)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.HIGH)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.HIGH)
+    GPIO.output(in8,GPIO.LOW)
+
+def backward():
+    print("backward")
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.HIGH)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.HIGH)
+    GPIO.output(in7,GPIO.LOW)
+    GPIO.output(in8,GPIO.HIGH)
+    temp1=0
+
+def stop():
+    print("stop")
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.LOW)
+    GPIO.output(in8,GPIO.LOW)
+
+def pleft():
+    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.HIGH)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.HIGH)
+    GPIO.output(in7,GPIO.LOW)
+    GPIO.output(in8,GPIO.HIGH)
 
 def dir_sr():
-    left_dc(69)
+    left_dc(70)
     right_dc(10)
 
 while(1):
@@ -112,137 +154,71 @@ while(1):
     x=input()
     
     if x=='r':
-        print("run")
-        if(temp1==1):
-         GPIO.output(in1,GPIO.HIGH)
-         GPIO.output(in2,GPIO.LOW)
-         GPIO.output(in3,GPIO.HIGH)
-         GPIO.output(in4,GPIO.LOW)
-         GPIO.output(in5,GPIO.HIGH)
-         GPIO.output(in6,GPIO.LOW)
-         GPIO.output(in7,GPIO.HIGH)
-         GPIO.output(in8,GPIO.LOW)
-         print("forward")
-         
-        else:
-         GPIO.output(in1,GPIO.LOW)
-         GPIO.output(in2,GPIO.HIGH)
-         GPIO.output(in3,GPIO.LOW)
-         GPIO.output(in4,GPIO.HIGH)
-         GPIO.output(in5,GPIO.LOW)
-         GPIO.output(in6,GPIO.HIGH)
-         GPIO.output(in7,GPIO.LOW)
-         GPIO.output(in8,GPIO.HIGH)
-         print("backward")
+        forward()
 
 
     elif x=='s':
-        print("stop")
         start_dc1()
-        GPIO.output(in1,GPIO.LOW)
-        GPIO.output(in2,GPIO.LOW)
-        GPIO.output(in3,GPIO.LOW)
-        GPIO.output(in4,GPIO.LOW)
-        GPIO.output(in5,GPIO.LOW)
-        GPIO.output(in6,GPIO.LOW)
-        GPIO.output(in7,GPIO.LOW)
-        GPIO.output(in8,GPIO.LOW)
-        
+        stop()
+    
+    elif x == 'f':
+        print('forward')
+        forward()
 
-    elif x=='f':
-        print("forward")
+    elif x=='w':
+        print("walk")
         change_dc(90)
-        GPIO.output(in1,GPIO.HIGH)
-        GPIO.output(in2,GPIO.LOW)
-        GPIO.output(in3,GPIO.HIGH)
-        GPIO.output(in4,GPIO.LOW)
-        GPIO.output(in5,GPIO.HIGH)
-        GPIO.output(in6,GPIO.LOW)
-        GPIO.output(in7,GPIO.HIGH)
-        GPIO.output(in8,GPIO.LOW)
+        forward()
+        sleep(.30)
+        change_dc(40)
+        temp1=1
+    elif x== 'wb':
+        print("walk backward")
+        change_dc(90)
+        backward()
         sleep(.30)
         change_dc(55)
-        temp1=1
-    
-    elif x == 'left':
-        change_dc(95)
-        GPIO.output(in1,GPIO.HIGH)
-        GPIO.output(in2,GPIO.LOW)
-        GPIO.output(in3,GPIO.HIGH)
-        GPIO.output(in4,GPIO.LOW)
-        GPIO.output(in5,GPIO.LOW)
-        GPIO.output(in6,GPIO.HIGH)
-        GPIO.output(in7,GPIO.LOW)
-        GPIO.output(in8,GPIO.HIGH)
+        temp1=0
         
-    elif x == 'sr':
+    
+    elif x == 'pleft':
+        change_dc(100)
+        pleft()
+        
+
+    elif x == 'no hoots':
+        change_dc(100)
+        forward()
+
+
+    elif x == 'sr': #slight right
         change_dc(90)
-        GPIO.output(in1,GPIO.HIGH)
-        GPIO.output(in2,GPIO.LOW)
-        GPIO.output(in3,GPIO.HIGH)
-        GPIO.output(in4,GPIO.LOW)
-        GPIO.output(in5,GPIO.HIGH)
-        GPIO.output(in6,GPIO.LOW)
-        GPIO.output(in7,GPIO.HIGH)
-        GPIO.output(in8,GPIO.LOW)
+        forward()
         sleep(.3)
         dir_sr()
-        sleep(1.5)
-        change_dc(80)
-        GPIO.output(in1,GPIO.LOW)
-        GPIO.output(in2,GPIO.HIGH)
-        GPIO.output(in3,GPIO.LOW)
-        GPIO.output(in4,GPIO.HIGH)
         
-    elif x == 'sl':
+        
+        
+    elif x == 'sl': #slight left, they're different right now because im' experimenting with things
         left_dc(50)
         right_dc(75)
-        GPIO.output(in1,GPIO.HIGH)
-        GPIO.output(in2,GPIO.LOW)
-        GPIO.output(in3,GPIO.HIGH)
-        GPIO.output(in4,GPIO.LOW)
-        GPIO.output(in5,GPIO.HIGH)
-        GPIO.output(in6,GPIO.LOW)
-        GPIO.output(in7,GPIO.HIGH)
-        GPIO.output(in8,GPIO.LOW)
+        forward()
         
     elif x=='b':
-        print("backward")
-        GPIO.output(in1,GPIO.LOW)
-        GPIO.output(in2,GPIO.HIGH)
-        GPIO.output(in3,GPIO.LOW)
-        GPIO.output(in4,GPIO.HIGH)
-        GPIO.output(in5,GPIO.LOW)
-        GPIO.output(in6,GPIO.HIGH)
-        GPIO.output(in7,GPIO.LOW)
-        GPIO.output(in8,GPIO.HIGH)
-        temp1=0
+        backward()
 
     elif x=='l':
         print("low")
-        p.ChangeDutyCycle(25)
-        p2.ChangeDutyCycle(25)
-        p3.ChangeDutyCycle(25)
-        p4.ChangeDutyCycle(25)
+        change_dc(25)
     elif x=='m':
         print("medium")
-        p.ChangeDutyCycle(50)
-        p2.ChangeDutyCycle(50)
-        p3.ChangeDutyCycle(50)
-        p4.ChangeDutyCycle(50)
+        change_dc(50)
 
     elif x=='h':
         print("high")
-        p.ChangeDutyCycle(75)
-        p2.ChangeDutyCycle(75)
-        p3.ChangeDutyCycle(75)
-        p4.ChangeDutyCycle(75)
+        change_dc(80)
     
-    elif x == 'p':
-        p.ChangeDutyCycle(90)
-        p2.ChangeDutyCycle(90)
-        p3.ChangeDutyCycle(90)
-        p4.ChangeDutyCycle(90)
+
     
     elif x == 'o':
         print('overdrive mode: DC 100%')
