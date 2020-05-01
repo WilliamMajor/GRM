@@ -10,7 +10,7 @@ ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 ssh.connect(host, username="root", password="sensthys1701")
 
 while True:
-    stdin, stdout, stderr = ssh.exec_command("echo 'test'")
+    stdin, stdout, stderr = ssh.exec_command("/riot/Socket/./socket GPS")
     while not stdout.channel.exit_status_ready():
         # Only print data if there is data to read in the channel
         if stdout.channel.recv_ready():
@@ -19,5 +19,3 @@ while True:
                 # Print data from stdout
                 print (stdout.channel.recv(1024))
     time.sleep(0.1)
-
-ssh.close()
