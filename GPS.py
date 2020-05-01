@@ -3,7 +3,7 @@ import select
 import time
 
 
-host = "192.168.1.81"
+host = "192.168.1.59"
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -17,5 +17,15 @@ while True:
             rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
             if len(rl) > 0:
                 # Print data from stdout
-                print (stdout.channel.recv(1024))
-    time.sleep(0.1)
+                data = stdout.channel.recv(1024)
+                data = data.split('\n')
+                data = data[2]
+                data = data.split(':')
+                data = data[1]
+                data = data.strip()
+                data = data.split(',')
+                longitude = data[0]
+                latitude = data[1]
+    time.sleep(1)
+
+ssh.close()
