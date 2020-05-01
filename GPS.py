@@ -24,8 +24,10 @@ while True:
                 data = data[1]
                 data = data.strip()
                 data = data.split(',')
-                longitude = data[0]
-                latitude = data[1]
+                latitude = data[0]
+                longitude = data[1]
+                print("latitude: " + latitude)
+                print("longitude: " + longitude)
     time.sleep(0.2)
 
 ssh.close()
