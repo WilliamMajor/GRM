@@ -59,6 +59,7 @@ try:
         _thread.start_new_thread(getRSFSensorData, ())
         _thread.start_new_thread(getRSBSensorData, ())
         _thread.start_new_thread(getFSensorData, ())
+        _thread.start_new_thread(minorMotorControl, ())
     except:
         print("Error unable to start thread")
 
@@ -107,8 +108,9 @@ def majorMotorControl(motorCommand):#This is where the functions that the tell t
     print(motorCommand)
 
 
-def minorMotorControl(): #This thread will use the sensors values on the reader to make minor adjustments if we end up needing it
-    print("filler")
+def minorMotorControl(): #This thread will use the sensors values/ GPS on the reader to make minor adjustments if we end up needing it
+    while not ending:
+        print("filler")
 
 def getLSFSensorData():
     while not ending:
