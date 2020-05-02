@@ -1,26 +1,28 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { CsvToHtmlTable } from "react-csv-to-table";
 
-function App() {
+import { sampleData } from "./sample";
+
+export const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container">
+
+      <h2> The Data Show below rendered from CSv file.  </h2>
+
+      <br/><br/>
+      <CsvToHtmlTable
+        data={sampleData}
+        csvDelimiter=","
+        tableClassName="table table-striped table-hover"
+      />
+
+
+      <h2>Your CSV data looks like below</h2>
+      <pre>
+      {sampleData}
+      </pre>
     </div>
   );
-}
+};
 
 export default App;
