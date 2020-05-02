@@ -154,6 +154,8 @@ def getGPSData():#The program to get the gps data goes here
             rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
             if len(rl) > 0:
                 # Print data from stdout
+                if(type(data) != str ):
+                    data = data.decode("utf-8")
                 data = stdout.channel.recv(1024)
                 data = data.split('\n')
                 data = data[2]
@@ -209,6 +211,9 @@ def followingWall():
         if currentLat == startingLat and currentLon == startingLon and FSDist <= dstFromWall: # we will need to round the lat and lon to get  in the right ballpark
             followWall = False
             break
+
+        if LSDist > 450: #this should be close to max range of the sensor so we know when basically there is nothing there
+            majorMotorControl(Direction.Left)#turn left to continue following eh wall
         if FSDist <= dstFromWall:
             majorMotorControl(Direction.Right)
         if LSDist < dstFromWall - 10 and LSDist > (dstFromWall - 60): ## we are drifing in to the left
