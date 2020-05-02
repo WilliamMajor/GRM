@@ -51,7 +51,7 @@ if __name__ == '__main__':
     test = GeoFencing.Fence()
 
     while True:
-        x = input("r to run e to exit boiiiiii")
+        x = input("r to run t to check and e to exit boiiiiii: ")
 
         if x == 'r':
             count = 0;
@@ -63,6 +63,13 @@ if __name__ == '__main__':
                 count += 1
                 print(count)
             print(test.list_points())
+
+        if x == 't':
+            if test.check_point((latitude, longitude)):
+                print("you in that mf fence bro!")
+            else:
+                print("na you outside that fence bro!")
+
         if x == 'e':
             break
 
