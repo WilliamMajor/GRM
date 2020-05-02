@@ -139,7 +139,7 @@ namespace MSRC
 
             if (args.Length == 0)
                 DEBUG_VIEW = false;
-            else if (args[0] == "-sensthysdebug")
+            else if (args[0] == "-grmdebug")
                 DEBUG_VIEW = true;
 
             int numWorkerThreads;
