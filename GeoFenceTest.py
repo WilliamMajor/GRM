@@ -31,7 +31,7 @@ def getGPS():
                     # Print data from stdout
                     data = stdout.channel.recv(1024)
                     if(type(data) != 'str'):
-                        data.decode("utf-8")
+                        data = data.decode("utf-8")
                     data = data.split('\n')
                     data = data[2]
                     data = data.split(':')
@@ -55,11 +55,9 @@ if __name__ == '__main__':
 
         if x == 'r':
             count = 0;
-            while count < 20:
+            while count < 100:
                 test.add_point((latitude, longitude))
                 time.sleep(0.2)
-                latitude += 1
-                longitude += 1
                 count += 1
                 print(count)
             print(test.list_points())

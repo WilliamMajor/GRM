@@ -6,18 +6,23 @@ class Fence:
     a boundary, and providing the ability to add / change points in the fence.
     """
 
-    def test(self):
-        my_fence = Fence()
-
-        my_fence.add_point((44.030013, -44.309738))
-        my_fence.add_point((45.032447, 66.784004))
-        my_fence.add_point((-28.837860, 59.928536))
-        my_fence.add_point((-24.759721, -20.930834))
-
-        if (my_fence.check_point((43.0000, 55.0000))):
-            print("point in range")
-        else:
-            print("point not in range")
+    # def test(self):
+    #     my_fence = Fence()
+    #
+    #     my_fence.add_point((44.030013, -44.309738))
+    #     my_fence.add_point((45.032447, 66.784004))
+    #     my_fence.add_point((-28.837860, 59.928536))
+    #     my_fence.add_point((-24.759721, -20.930834))
+    #
+    #     if my_fence.check_point((43.0000, 55.0000), debug=True):
+    #         print("point in range")
+    #     else:
+    #         print("point not in range")
+    #
+    #     if my_fence.check_point((77.0000, 55.0000), debug=True):
+    #         print("should not print")
+    #     else:
+    #         print("point not in range")
 
     points = None
 
@@ -157,7 +162,7 @@ class Fence:
             print("\n")
             print("All equations formed (in order):", line_eqns)
             print("Finding intersections...\n")
-            print("\nx bounds are:", str(self.max_x), str(self.min_x), "y bounds:", str(self.max_y), str(self.min_y))
+            # print("\nx bounds are:", str(self.max_x), str(self.min_x), "y bounds:", str(self.max_y), str(self.min_y))
         intersection_points_left = []
         intersection_points_right = []
         for line_index in range(0, len(line_eqns)):
@@ -189,6 +194,11 @@ class Fence:
         else:
             print(intersection_points_left, intersection_points_right)
             return(False)
+
+
+testing = Fence()
+
+testing.test()
 
 
 def convertDMSToDD(degrees, minutes, seconds):

@@ -4,6 +4,8 @@ import paramiko
 import select
 import time
 from enum import Enum
+import GeoFencing
+
 
 class Direction(Enum):
     Forward = 0
@@ -14,32 +16,32 @@ class Direction(Enum):
     Overdrive = 5
 
 #bools
-ending = False;
+ending = False
 turning = False
+followWall = True
 
 #Gobal values for the lat and lon that we will be using
 startingLat = 0
 startingLon = 0
-leftUpperCornerLat = 0;
-rightUpperCornerLat = 0;
-rightLowerCornerLat = 0;
+leftUpperCornerLat = 0
+leftUpperCornerLon = 0
+rightUpperCornerLat = 0
+rightUpperCornerLon = 0
+rightLowerCornerLat = 0
+rightLowerCornerLat = 0
 currentLat = 0
 currentLon = 0
+dstFromWall = 200
 
 #sensor values
-LSFDist = 0;
-LSBDist = 0;
-RSFDist = 0;
-RSBDist = 0;
-FSDist = 0;
+LSDist = 0
+RSDist = 0
+FSDist = 0
 
 #define all needed GPIO shit
 # trigger pin number they need to be changed to the pin to be used do we just need one trigger pin for all of them???
-LSFTrigger = 18
-LSBTrigger = 18
-RSFTrigger = 18
-RSBTrigger = 18
-FSTrigger = 18
+Trigger = 18
+
 # echo pin number they need to be changed to the pin to be used
 LSFEcho = 24
 LSBEcho = 24
@@ -68,19 +70,15 @@ start_dc = 75 #define the starting motorspeed
 GPIO.setmode(GPIO.BCM)#set the gpio to be defined by gpio number not pin number
 
 #setup for sensors
-GPIO.setup(LSFTrigger, GPIO.OUT)
+GPIO.setup(Trigger, GPIO.OUT)
 GPIO.setup(LSFEcho, GPIO.IN)
 
-GPIO.setup(LSBTrigger, GPIO.OUT)
 GPIO.setup(LSBEcho, GPIO.IN)
 
-GPIO.setup(RSFTrigger, GPIO.OUT)
 GPIO.setup(RSFEcho, GPIO.IN)
 
-GPIO.setup(RSBTrigger, GPIO.OUT)
 GPIO.setup(RSBEcho, GPIO.IN)
 
-GPIO.setup(FSTrigger, GPIO.OUT)
 GPIO.setup(FSEcho, GPIO.IN)
 
 #setup for motors
@@ -114,24 +112,22 @@ p2 = GPIO.PWM(en2, 1000)#front right motor pwm signal
 p3 = GPIO.PWM(en3, 1000)#back left motor pwm signal
 p4 = GPIO.PWM(en4, 1000)#front left motor pwm signal
 
+geofence = GeoFencing.Fence()
+
 
 #main thread for the program
 try:
     try:
-        _thread.start_new_thread(getGPSData,())
-        _thread.start_new_thread(getSensorData, ())
-        _thread.start_new_thread(getLSFSensorData, ())
-        _thread.start_new_thread(getLSBSensorData, ())
-        _thread.start_new_thread(getRSFSensorData, ())
-        _thread.start_new_thread(getRSBSensorData, ())
+        # _thread.start_new_thread(getGPSData,())
+        _thread.start_new_thread(getLSSensorData, ())
+        _thread.start_new_thread(getRSSensorData, ())
         _thread.start_new_thread(getFSensorData, ())
-        _thread.start_new_thread(minorMotorControl, ())
+        _thread.start_new_thread(followingWall, ())
     except:
         print("Error unable to start thread")
 
 
     while not ending:
-        majorMotorControl(Direction.Forward)
         time.sleep(1)
     GPIO.cleanup()
 except KeyboardInterrupt:
@@ -148,7 +144,7 @@ def getGPSData():#The program to get the gps data goes here
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(host, username="root", password="sensthys1701")
     except:
-        print("Error Connecting to GPS Data")
+        print("Error Connecting to Reader")
 
     #This will pull in the initial GPS so we know when we have gotten back to the starting point.
     stdin, stdout, stderr = ssh.exec_command("/riot/Socket/./socket GPS")
@@ -158,7 +154,15 @@ def getGPSData():#The program to get the gps data goes here
             rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
             if len(rl) > 0:
                 # Print data from stdout
-                print(stdout.channel.recv(1024))
+                data = stdout.channel.recv(1024)
+                data = data.split('\n')
+                data = data[2]
+                data = data.split(':')
+                data = data[1]
+                data = data.strip()
+                data = data.split(',')
+                startingLat = data[0]
+                startingLon = data[1]
 
     while not ending: #this is going to be pulling the gps data continually from the reader
         stdin, stdout, stderr = ssh.exec_command("/riot/Socket/./socket GPS")
@@ -168,7 +172,15 @@ def getGPSData():#The program to get the gps data goes here
                 rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
                 if len(rl) > 0:
                     # Print data from stdout
-                    print(stdout.channel.recv(1024))
+                    data = stdout.channel.recv(1024)
+                    data = data.split('\n')
+                    data = data[2]
+                    data = data.split(':')
+                    data = data[1]
+                    data = data.strip()
+                    data = data.split(',')
+                    currentLat = data[0]
+                    currentLon = data[1]
         time.sleep(0.2)
 
 #Motor Control Functions
@@ -189,9 +201,23 @@ def majorMotorControl(motorCommand):#This function will act as a deligator calli
     }
 
 
-def minorMotorControl(): #This thread will use the sensors values/ GPS on the reader to make minor adjustments if we end up needing it
-    while not ending:
-        print("filler")
+def followingWall():
+    global dstFromWall
+    global followWall
+    dstFromWall = LSDist;
+    while followWall:
+        if currentLat == startingLat and currentLon == startingLon and FSDist <= dstFromWall: # we will need to round the lat and lon to get  in the right ballpark
+            followWall = False
+            break
+        if FSDist <= dstFromWall:
+            majorMotorControl(Direction.Right)
+        if LSDist < dstFromWall - 10 and LSDist > (dstFromWall - 60): ## we are drifing in to the left
+            print("need to turn slightly right")
+        elif LSD > dstFromWall + 10:
+            print("need to turn slightly left ")
+
+
+
 
 
 def startMotors():
@@ -294,12 +320,12 @@ def overdriveMode():
     p4.ChangeDutyCycle(100)
 
 
-def getLSFSensorData():
+def getLSSensorData():
+    global LSDist
     while not ending:
-
-        GPIO.output(LSFTrigger, True)
+        GPIO.output(Trigger, True)
         time.sleep(0.00001)
-        GPIO.output(LSFTrigger, False)
+        GPIO.output(Trigger, False)
         start = time.time()
         stop = time.time()
         while GPIO.input(LSFEcho) == 0:
@@ -307,33 +333,16 @@ def getLSFSensorData():
         while GPIO.input(LSFEcho) == 1:
             stop = time.time()
         elapsed = stop - start
-        LSFDist = elapsed * 17150  # speed of sound is 34300 cm/s
+        LSDist = elapsed * 17150  # speed of sound is 34300 cm/s
         time.sleep(0.2)
 
 
-def getLSBSensorData():
+def getRSSensorData():
+    global RSDist
     while not ending:
-
-        GPIO.output(LSBTrigger, True)
+        GPIO.output(Trigger, True)
         time.sleep(0.00001)
-        GPIO.output(LSBTrigger, False)
-        start = time.time()
-        stop = time.time()
-        while GPIO.input(LSBEcho) == 0:
-            start = time.time()
-        while GPIO.input(LSBEcho) == 1:
-            stop = time.time()
-        elapsed = stop - start
-        LSBDist = elapsed * 17150  # speed of sound is 34300 cm/s
-        time.sleep(0.2)
-
-
-def getRSFSensorData():
-    while not ending:
-
-        GPIO.output(RSFTrigger, True)
-        time.sleep(0.00001)
-        GPIO.output(RSFTrigger, False)
+        GPIO.output(Trigger, False)
         start = time.time()
         stop = time.time()
         while GPIO.input(RSFEcho) == 0:
@@ -341,33 +350,16 @@ def getRSFSensorData():
         while GPIO.input(RSFEcho) == 1:
             stop = time.time()
         elapsed = stop - start
-        RSFDist = elapsed * 17150  # speed of sound is 34300 cm/s
-        time.sleep(0.2)
-
-
-def getRSBSensorData():
-    while not ending:
-
-        GPIO.output(RSBTrigger, True)
-        time.sleep(0.00001)
-        GPIO.output(RSBTrigger, False)
-        start = time.time()
-        stop = time.time()
-        while GPIO.input(RSBEcho) == 0:
-            start = time.time()
-        while GPIO.input(RSFBcho) == 1:
-            stop = time.time()
-        elapsed = stop - start
-        RSBDist = elapsed * 17150  # speed of sound is 34300 cm/s
+        RSDist = elapsed * 17150  # speed of sound is 34300 cm/s
         time.sleep(0.2)
 
 
 def getFSensorData():
+    global FSDist
     while not ending:
-
-        GPIO.output(FSTrigger, True)
+        GPIO.output(Trigger, True)
         time.sleep(0.00001)
-        GPIO.output(FSTrigger, False)
+        GPIO.output(Trigger, False)
         start = time.time()
         stop = time.time()
         while GPIO.input(LSFEcho) == 0:
@@ -377,8 +369,3 @@ def getFSensorData():
         elapsed = stop - start
         FSDist = elapsed * 17150  # speed of sound is 34300 cm/s
         time.sleep(0.2)
-
-
-def createGEOFence(): #this is going to be the initial mode the robot starts in that simply circles the roof and returns to the starting point
-    print("Filler")
-
