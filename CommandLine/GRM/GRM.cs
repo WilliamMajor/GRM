@@ -1,7 +1,7 @@
 ﻿using RFID.Notifications;
 using System;
 using System.Collections.Generic;
-//using System.Linq;
+using System.Linq;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.IO;
@@ -171,13 +171,28 @@ namespace GRM
                     currentlyReading = false;
                     programEnding = true;
                     mreFind.Set();
+
+                    foreach (KeyValuePair<string, TagObject> entry in newAllTagInformation)
+                    {
+
+                        if(entry.Value.SCDEAvg != 0)
+                        {
+                            debugDataStream.Write("{0}, {1}, ", DateTime.Now.ToString(), entry.Key);
+                            debugDataStream.Write("{0}, ", entry.Value.TEMP);
+                            debugDataStream.Write("{0}, ", entry.Value.SCDEAvg);
+                            debugDataStream.Write("{0}, ", entry.Value.TimesRead);
+                            debugDataStream.Write("{0}, ", entry.Value.Lat);
+                            debugDataStream.Write("{0}, ", entry.Value.Lon);
+
+                            debugDataStream.WriteLine();
+                            debugDataStream.Flush();
+                        }
+                    }
+
+
                     Environment.Exit(0);
                 }
             }
-            
-
-
-
         }
 
 
@@ -324,43 +339,43 @@ namespace GRM
                 {
                     TagObject allTagObject = new TagObject();
 
-                    if (DEBUG_VIEW)
-                    {
-                        debugDataStream.Write("{0}, {1}, {2}, ", DateTime.Now.ToString(), entry.Key, this.currentPowerLevel);
-                        debugDataStream.Write("{0}, ", entry.Value.TSSI);
-                        debugDataStream.Write("{0}, ", entry.Value.SCDEraw);
-                        debugDataStream.Write("{0}, ", entry.Value.SCDE);
-                        debugDataStream.Write("{0}, ", entry.Value.TEMP);
-                        debugDataStream.Write("{0}, ", entry.Value.RSSI);
-                        debugDataStream.Write("{0}, ", entry.Value.SCDEAvg);
-                        debugDataStream.Write("{0}, ", entry.Value.SCDEStdDev);
-                        debugDataStream.Write("{0}, ", entry.Value.TimesRead);
-                        debugDataStream.Write("{0}, ", entry.Value.TotalSCDEValue);
-                        debugDataStream.Write("{0}, ", entry.Value.Lat);
-                        debugDataStream.Write("{0}, ", entry.Value.Lon);
-                        debugDataStream.Write("{0}, ", entry.Value.freq_TSSI);
-                        debugDataStream.Write("{0}, ", entry.Value.freq_SCDE);
-                    }
+                    //if (DEBUG_VIEW)
+                    //{
+                    //    debugDataStream.Write("{0}, {1}, {2}, ", DateTime.Now.ToString(), entry.Key, this.currentPowerLevel);
+                    //    debugDataStream.Write("{0}, ", entry.Value.TSSI);
+                    //    debugDataStream.Write("{0}, ", entry.Value.SCDEraw);
+                    //    debugDataStream.Write("{0}, ", entry.Value.SCDE);
+                    //    debugDataStream.Write("{0}, ", entry.Value.TEMP);
+                    //    debugDataStream.Write("{0}, ", entry.Value.RSSI);
+                    //    debugDataStream.Write("{0}, ", entry.Value.SCDEAvg);
+                    //    debugDataStream.Write("{0}, ", entry.Value.SCDEStdDev);
+                    //    debugDataStream.Write("{0}, ", entry.Value.TimesRead);
+                    //    debugDataStream.Write("{0}, ", entry.Value.TotalSCDEValue);
+                    //    debugDataStream.Write("{0}, ", entry.Value.Lat);
+                    //    debugDataStream.Write("{0}, ", entry.Value.Lon);
+                    //    debugDataStream.Write("{0}, ", entry.Value.freq_TSSI);
+                    //    debugDataStream.Write("{0}, ", entry.Value.freq_SCDE);
+                    //}
 
-                    if (CONSOLE_DEBUG)
-                    {
-                        Console.Write("Read: ");
-                        Console.Write("{0}, {1}, {2}, ", DateTime.Now.ToString(), entry.Key, this.currentPowerLevel);
-                        Console.Write("{0}, ", entry.Value.TSSI);
-                        Console.Write("{0}, ", entry.Value.SCDEraw);
-                        Console.Write("{0}, ", entry.Value.SCDE);
-                        Console.Write("{0}, ", entry.Value.TEMP);
-                        Console.Write("{0}, ", entry.Value.RSSI);
-                        Console.Write("{0}, ", entry.Value.SCDEAvg);
-                        Console.Write("{0}, ", entry.Value.SCDEStdDev);
-                        Console.Write("{0}, ", entry.Value.TimesRead);
-                        Console.Write("{0}, ", entry.Value.TotalSCDEValue);
-                        Console.Write("{0}, ", entry.Value.Lat);
-                        Console.Write("{0}, ", entry.Value.Lon);
-                        Console.Write("{0}, ", entry.Value.freq_TSSI);
-                        Console.Write("{0}, ", entry.Value.freq_SCDE);
-                        Console.WriteLine();
-                    }
+                    //if (CONSOLE_DEBUG)
+                    //{
+                    //    Console.Write("Read: ");
+                    //    Console.Write("{0}, {1}, {2}, ", DateTime.Now.ToString(), entry.Key, this.currentPowerLevel);
+                    //    Console.Write("{0}, ", entry.Value.TSSI);
+                    //    Console.Write("{0}, ", entry.Value.SCDEraw);
+                    //    Console.Write("{0}, ", entry.Value.SCDE);
+                    //    Console.Write("{0}, ", entry.Value.TEMP);
+                    //    Console.Write("{0}, ", entry.Value.RSSI);
+                    //    Console.Write("{0}, ", entry.Value.SCDEAvg);
+                    //    Console.Write("{0}, ", entry.Value.SCDEStdDev);
+                    //    Console.Write("{0}, ", entry.Value.TimesRead);
+                    //    Console.Write("{0}, ", entry.Value.TotalSCDEValue);
+                    //    Console.Write("{0}, ", entry.Value.Lat);
+                    //    Console.Write("{0}, ", entry.Value.Lon);
+                    //    Console.Write("{0}, ", entry.Value.freq_TSSI);
+                    //    Console.Write("{0}, ", entry.Value.freq_SCDE);
+                    //    Console.WriteLine();
+                    //}
 
                     if (newAllTagInformation.TryGetValue(entry.Key, out allTagObject))
                     {
@@ -410,43 +425,43 @@ namespace GRM
                         if (entry.Value.TEMP != 0)
                             allTagObject.TEMP = entry.Value.TEMP;
 
-                        if (DEBUG_VIEW)
-                        {
-                            debugDataStream.Write("{0}, ", allTagObject.TSSI);
-                            debugDataStream.Write("{0}, ", allTagObject.SCDE);
-                            debugDataStream.Write("{0}, ", allTagObject.TEMP);
-                            debugDataStream.Write("{0}, ", allTagObject.RSSI);
-                            debugDataStream.Write("{0}, ", allTagObject.SCDEAvg);
-                            debugDataStream.Write("{0}, ", allTagObject.SCDEStdDev);
-                            debugDataStream.Write("{0}, ", allTagObject.TimesRead);
-                            debugDataStream.Write("{0}, ", allTagObject.TotalSCDEValue);
-                            debugDataStream.Write("{0}, ", allTagObject.Lat);
-                            debugDataStream.Write("{0}, ", allTagObject.Lon);
-                            debugDataStream.Write("{0}, ", allTagObject.freq_TSSI);
-                            debugDataStream.Write("{0}, ", allTagObject.freq_SCDE);
+                        //if (DEBUG_VIEW)
+                        //{
+                        //    debugDataStream.Write("{0}, ", allTagObject.TSSI);
+                        //    debugDataStream.Write("{0}, ", allTagObject.SCDE);
+                        //    debugDataStream.Write("{0}, ", allTagObject.TEMP);
+                        //    debugDataStream.Write("{0}, ", allTagObject.RSSI);
+                        //    debugDataStream.Write("{0}, ", allTagObject.SCDEAvg);
+                        //    debugDataStream.Write("{0}, ", allTagObject.SCDEStdDev);
+                        //    debugDataStream.Write("{0}, ", allTagObject.TimesRead);
+                        //    debugDataStream.Write("{0}, ", allTagObject.TotalSCDEValue);
+                        //    debugDataStream.Write("{0}, ", allTagObject.Lat);
+                        //    debugDataStream.Write("{0}, ", allTagObject.Lon);
+                        //    debugDataStream.Write("{0}, ", allTagObject.freq_TSSI);
+                        //    debugDataStream.Write("{0}, ", allTagObject.freq_SCDE);
 
-                            debugDataStream.WriteLine();
-                            debugDataStream.Flush();
-                        }
+                        //    debugDataStream.WriteLine();
+                        //    debugDataStream.Flush();
+                        //}
 
-                        if (CONSOLE_DEBUG)
-                        {
-                            Console.Write("Update: ");
-                            Console.Write("{0}, ", allTagObject.TSSI);
-                            Console.Write("{0}, ", allTagObject.SCDE);
-                            Console.Write("{0}, ", allTagObject.TEMP);
-                            Console.Write("{0}, ", allTagObject.RSSI);
-                            Console.Write("{0}, ", allTagObject.SCDEAvg);
-                            Console.Write("{0}, ", allTagObject.SCDEStdDev);
-                            Console.Write("{0}, ", allTagObject.TimesRead);
-                            Console.Write("{0}, ", allTagObject.TotalSCDEValue);
-                            Console.Write("{0}, ", allTagObject.Lat);
-                            Console.Write("{0}, ", allTagObject.Lon);
-                            Console.Write("{0}, ", allTagObject.freq_TSSI);
-                            Console.Write("{0}, ", allTagObject.freq_SCDE);
+                        //if (CONSOLE_DEBUG)
+                        //{
+                        //    Console.Write("Update: ");
+                        //    Console.Write("{0}, ", allTagObject.TSSI);
+                        //    Console.Write("{0}, ", allTagObject.SCDE);
+                        //    Console.Write("{0}, ", allTagObject.TEMP);
+                        //    Console.Write("{0}, ", allTagObject.RSSI);
+                        //    Console.Write("{0}, ", allTagObject.SCDEAvg);
+                        //    Console.Write("{0}, ", allTagObject.SCDEStdDev);
+                        //    Console.Write("{0}, ", allTagObject.TimesRead);
+                        //    Console.Write("{0}, ", allTagObject.TotalSCDEValue);
+                        //    Console.Write("{0}, ", allTagObject.Lat);
+                        //    Console.Write("{0}, ", allTagObject.Lon);
+                        //    Console.Write("{0}, ", allTagObject.freq_TSSI);
+                        //    Console.Write("{0}, ", allTagObject.freq_SCDE);
 
-                            Console.WriteLine();
-                        }
+                        //    Console.WriteLine();
+                        //}
 
                         //allTagInformation.TryUpdate(entry.Key, newValues, oldValues);
                     }
@@ -467,43 +482,44 @@ namespace GRM
                             entry.Value.SCDEStdDev = 0;
                         }
 
-                        if (DEBUG_VIEW)
-                        {
-                            debugDataStream.Write("{0}, ", entry.Value.TSSI);
-                            debugDataStream.Write("{0}, ", entry.Value.SCDE);
-                            debugDataStream.Write("{0}, ", entry.Value.TEMP);
-                            debugDataStream.Write("{0}, ", entry.Value.RSSI);
-                            debugDataStream.Write("{0}, ", entry.Value.SCDEAvg);
-                            debugDataStream.Write("{0}, ", entry.Value.TimesRead);
-                            debugDataStream.Write("{0}, ", entry.Value.TotalSCDEValue);
-                            debugDataStream.Write("{0}, ", entry.Value.Lat);
-                            debugDataStream.Write("{0}, ", entry.Value.Lon);
-                            debugDataStream.Write("{0}, ", entry.Value.freq_TSSI);
-                            debugDataStream.Write("{0}, ", entry.Value.freq_SCDE);
+                        //if (DEBUG_VIEW)
+                        //{
+                        //    debugDataStream.Write("{0}, ", entry.Value.TSSI);
+                        //    debugDataStream.Write("{0}, ", entry.Value.SCDE);
+                        //    debugDataStream.Write("{0}, ", entry.Value.TEMP);
+                        //    debugDataStream.Write("{0}, ", entry.Value.RSSI);
+                        //    debugDataStream.Write("{0}, ", entry.Value.SCDEAvg);
+                        //    debugDataStream.Write("{0}, ", entry.Value.TimesRead);
+                        //    debugDataStream.Write("{0}, ", entry.Value.TotalSCDEValue);
+                        //    debugDataStream.Write("{0}, ", entry.Value.Lat);
+                        //    debugDataStream.Write("{0}, ", entry.Value.Lon);
+                        //    debugDataStream.Write("{0}, ", entry.Value.freq_TSSI);
+                        //    debugDataStream.Write("{0}, ", entry.Value.freq_SCDE);
 
-                            debugDataStream.WriteLine();
-                            debugDataStream.Flush();
-                        }
+                        //    debugDataStream.WriteLine();
+                        //    debugDataStream.Flush();
+                        //}
 
-                        if (CONSOLE_DEBUG)
-                        {
-                            Console.Write("add: ");
-                            Console.Write("{0}, ", entry.Value.TSSI);
-                            Console.Write("{0}, ", entry.Value.SCDE);
-                            Console.Write("{0}, ", entry.Value.TEMP);
-                            Console.Write("{0}, ", entry.Value.RSSI);
-                            Console.Write("{0}, ", entry.Value.SCDEAvg);
-                            Console.Write("{0}, ", entry.Value.TimesRead);
-                            Console.Write("{0}, ", entry.Value.TotalSCDEValue);
-                            Console.Write("{0}, ", entry.Value.Lat);
-                            Console.Write("{0}, ", entry.Value.Lon);
-                            Console.Write("{0}, ", entry.Value.freq_TSSI);
-                            Console.Write("{0}, ", entry.Value.freq_SCDE);
+                        //if (CONSOLE_DEBUG)
+                        //{
+                        //    Console.Write("add: ");
+                        //    Console.Write("{0}, ", entry.Value.TSSI);
+                        //    Console.Write("{0}, ", entry.Value.SCDE);
+                        //    Console.Write("{0}, ", entry.Value.TEMP);
+                        //    Console.Write("{0}, ", entry.Value.RSSI);
+                        //    Console.Write("{0}, ", entry.Value.SCDEAvg);
+                        //    Console.Write("{0}, ", entry.Value.TimesRead);
+                        //    Console.Write("{0}, ", entry.Value.TotalSCDEValue);
+                        //    Console.Write("{0}, ", entry.Value.Lat);
+                        //    Console.Write("{0}, ", entry.Value.Lon);
+                        //    Console.Write("{0}, ", entry.Value.freq_TSSI);
+                        //    Console.Write("{0}, ", entry.Value.freq_SCDE);
 
-                            Console.WriteLine();
-                        }
+                        //    Console.WriteLine();
+                        //}
 
                         newAllTagInformation.TryAdd(entry.Key, entry.Value);
+                        Console.WriteLine("New Tag Found!: {0}", entry.Key);
                     }
                 }
             }
@@ -541,14 +557,14 @@ namespace GRM
                 foreach (double value in workingList)
                     tempList.AddLast(value);
 
-                //if (tempList.Count > 6)
-                //{
-                //    tempList.Remove(tempList.Max());
-                //    tempList.Remove(tempList.Max());
+                if (tempList.Count > 6)
+                {
+                    tempList.Remove(tempList.Max());
+                    tempList.Remove(tempList.Max());
 
-                //    tempList.Remove(tempList.Min());
-                //    tempList.Remove(tempList.Min());
-                //}
+                    tempList.Remove(tempList.Min());
+                    tempList.Remove(tempList.Min());
+                }
 
                 foreach (double value in tempList)
                     average += value;
@@ -708,7 +724,7 @@ namespace GRM
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error getting register content " + commandInfo + Environment.NewLine + ex);
+                //Console.WriteLine("Error getting register content " + commandInfo + Environment.NewLine + ex);
             }
         }
 
