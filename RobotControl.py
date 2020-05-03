@@ -97,7 +97,7 @@ sample_time = 1
 
 #define all needed GPIO shit
 # trigger pin number they need to be changed to the pin to be used do we just need one trigger pin for all of them???
-Trigger = 18
+Trigger = 5
 
 # echo pin number they need to be changed to the pin to be used
 FEcho = 6
@@ -127,9 +127,7 @@ GPIO.setmode(GPIO.BCM)#set the gpio to be defined by gpio number not pin number
 #setup for sensors
 GPIO.setup(Trigger, GPIO.OUT)
 GPIO.setup(FEcho, GPIO.IN)
-
 GPIO.setup(LEcho, GPIO.IN)
-
 GPIO.setup(REcho, GPIO.IN)
 
 
