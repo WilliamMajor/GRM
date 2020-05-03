@@ -202,10 +202,10 @@ def followingWall():
 
 
 
-def getLSensorData():
+def getSensorData():
     global LSDist
     while 1:
-        print(LSDist)
+
         GPIO.output(Trigger, True)
         time.sleep(0.00001)
         GPIO.output(Trigger, False)
@@ -215,43 +215,13 @@ def getLSensorData():
             start = time.time()
         while GPIO.input(LEcho) == 1:
             stop = time.time()
+        print(LSDist)
         elapsed = stop - start
         LSDist = elapsed * 17150  # speed of sound is 34300 cm/s
         time.sleep(0.2)
 
 
-def getRSensorData():
-    global RSDist
-    while not ending:
-        GPIO.output(Trigger, True)
-        time.sleep(0.00001)
-        GPIO.output(Trigger, False)
-        start = time.time()
-        stop = time.time()
-        while GPIO.input(REcho) == 0:
-            start = time.time()
-        while GPIO.input(REcho) == 1:
-            stop = time.time()
-        elapsed = stop - start
-        RSDist = elapsed * 17150  # speed of sound is 34300 cm/s
-        time.sleep(0.2)
 
-
-def getFSensorData():
-    global FSDist
-    while 1:
-        GPIO.output(Trigger, True)
-        time.sleep(0.00001)
-        GPIO.output(Trigger, False)
-        start = time.time()
-        stop = time.time()
-        while GPIO.input(FEcho) == 0:
-            start = time.time()
-        while GPIO.input(FEcho) == 1:
-            stop = time.time()
-        elapsed = stop - start
-        FSDist = elapsed * 17150  # speed of sound is 34300 cm/s
-        time.sleep(0.2)
 
 def right_dc(num):
     p.ChangeDutyCycle(num)
@@ -345,9 +315,7 @@ def dir_sr():
 try:
     try:
         # _thread.start_new_thread(getGPSData,())
-        _thread.start_new_thread(getLSensorData, ())
-        _thread.start_new_thread(getRSensorData, ())
-        _thread.start_new_thread(getFSensorData, ())
+        _thread.start_new_thread(getSensorData, ())
         _thread.start_new_thread(followingWall, ())
     except:
         print("Error unable to start thread")
