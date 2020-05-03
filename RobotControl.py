@@ -271,3 +271,86 @@ def getFSensorData():
         elapsed = stop - start
         FSDist = elapsed * 17150  # speed of sound is 34300 cm/s
         time.sleep(0.2)
+
+def right_dc(num):
+    p.ChangeDutyCycle(num)
+    p2.ChangeDutyCycle(num)
+    
+
+def left_dc(num):
+    p3.ChangeDutyCycle(num)
+    p4.ChangeDutyCycle(num)
+    
+
+def half_dc(): 
+    p.ChangeDutyCycle(15)
+    p2.ChangeDutyCycle(15)
+    p3.ChangeDutyCycle(15)
+    p4.ChangeDutyCycle(15)
+def change_dc(num):
+    p.ChangeDutyCycle(num)
+    p2.ChangeDutyCycle(num)
+    p3.ChangeDutyCycle(num)
+    p4.ChangeDutyCycle(num)
+
+def start_dc1():
+    p.ChangeDutyCycle(start_dc)
+    p2.ChangeDutyCycle(start_dc)
+    p3.ChangeDutyCycle(start_dc)
+    p4.ChangeDutyCycle(start_dc)
+def forward():
+    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.HIGH)
+    GPIO.output(in8,GPIO.HIGH)
+
+def backward():
+    print("backward")
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.HIGH)
+    GPIO.output(in4,GPIO.HIGH)
+    GPIO.output(in5,GPIO.HIGH)
+    GPIO.output(in6,GPIO.HIGH)
+    GPIO.output(in7,GPIO.LOW)
+    GPIO.output(in8,GPIO.LOW)
+    temp1=0
+
+def stop():
+    print("stop")
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.LOW)
+    GPIO.output(in8,GPIO.LOW)
+
+def pleft():
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.HIGH)
+    GPIO.output(in4,GPIO.HIGH)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.HIGH)
+    GPIO.output(in8,GPIO.HIGH)
+
+def pright():
+    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.HIGH)
+    GPIO.output(in6,GPIO.HIGH)
+    GPIO.output(in7,GPIO.LOW)
+    GPIO.output(in8,GPIO.LOW)
+
+def dir_sr():
+    left_dc(70)
+    right_dc(10)
