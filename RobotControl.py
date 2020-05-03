@@ -372,7 +372,6 @@ try:
 
     while not ending:
         time.sleep(1)
-    GPIO.cleanup()
 except KeyboardInterrupt:
     GPIO.cleanup()
 except:
