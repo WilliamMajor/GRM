@@ -43,11 +43,9 @@ FSDist = 0
 Trigger = 18
 
 # echo pin number they need to be changed to the pin to be used
-LSFEcho = 24
-LSBEcho = 24
-RSFEcho = 24
-RSBEcho = 24
-FSEcho  = 24
+FEcho = 6
+LEcho = 19
+REcho = 9
 
 #RIGHT WHEEL GPIO
 en1 = 25 #right back enable
@@ -119,8 +117,8 @@ geofence = GeoFencing.Fence()
 try:
     try:
         # _thread.start_new_thread(getGPSData,())
-        _thread.start_new_thread(getLSSensorData, ())
-        _thread.start_new_thread(getRSSensorData, ())
+        _thread.start_new_thread(getLSensorData, ())
+        _thread.start_new_thread(getRSensorData, ())
         _thread.start_new_thread(getFSensorData, ())
         _thread.start_new_thread(followingWall, ())
     except:
@@ -224,7 +222,7 @@ def followingWall():
 
 
 
-def getLSSensorData():
+def getLSensorData():
     global LSDist
     while not ending:
         GPIO.output(Trigger, True)
@@ -232,16 +230,16 @@ def getLSSensorData():
         GPIO.output(Trigger, False)
         start = time.time()
         stop = time.time()
-        while GPIO.input(LSFEcho) == 0:
+        while GPIO.input(LEcho) == 0:
             start = time.time()
-        while GPIO.input(LSFEcho) == 1:
+        while GPIO.input(LEcho) == 1:
             stop = time.time()
         elapsed = stop - start
         LSDist = elapsed * 17150  # speed of sound is 34300 cm/s
         time.sleep(0.2)
 
 
-def getRSSensorData():
+def getRSensorData():
     global RSDist
     while not ending:
         GPIO.output(Trigger, True)
@@ -249,9 +247,9 @@ def getRSSensorData():
         GPIO.output(Trigger, False)
         start = time.time()
         stop = time.time()
-        while GPIO.input(RSFEcho) == 0:
+        while GPIO.input(REcho) == 0:
             start = time.time()
-        while GPIO.input(RSFEcho) == 1:
+        while GPIO.input(REcho) == 1:
             stop = time.time()
         elapsed = stop - start
         RSDist = elapsed * 17150  # speed of sound is 34300 cm/s
@@ -266,9 +264,9 @@ def getFSensorData():
         GPIO.output(Trigger, False)
         start = time.time()
         stop = time.time()
-        while GPIO.input(LSFEcho) == 0:
+        while GPIO.input(FEcho) == 0:
             start = time.time()
-        while GPIO.input(LSFEcho) == 1:
+        while GPIO.input(FEcho) == 1:
             stop = time.time()
         elapsed = stop - start
         FSDist = elapsed * 17150  # speed of sound is 34300 cm/s
