@@ -3,8 +3,8 @@ import _thread
 import paramiko
 import select
 import time
+#import GeoFencing
 from enum import Enum
-import GeoFencing
 
 
 class Direction(Enum):
@@ -108,7 +108,6 @@ p2 = GPIO.PWM(en2, 1000)#front right motor pwm signal
 p3 = GPIO.PWM(en3, 1000)#back left motor pwm signal
 p4 = GPIO.PWM(en4, 1000)#front left motor pwm signal
 
-geofence = GeoFencing.Fence()
 
 
 #main thread for the program
