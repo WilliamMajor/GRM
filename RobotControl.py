@@ -425,9 +425,8 @@ try:
         print("Error unable to start thread")
 
 
-    while not ending:
+    while 1:
         time.sleep(1)
-    GPIO.cleanup()
 except KeyboardInterrupt:
     GPIO.cleanup()
 except:
