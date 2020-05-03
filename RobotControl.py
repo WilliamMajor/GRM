@@ -37,6 +37,7 @@ dstFromWall = 200
 LSDist = 0
 RSDist = 0
 FSDist = 0
+sample_time = .01
 
 #define all needed GPIO shit
 # trigger pin number they need to be changed to the pin to be used do we just need one trigger pin for all of them???
@@ -205,23 +206,61 @@ def followingWall():
 def getSensorData():
     global LSDist
     while 1:
+        fdist = get_Fdistance()
+        ldist = get_Ldistance()
+        rdist = get_Rdistance()
+        print(f'Front dist {fdist}')
+        print(f'Left dist {ldist}')
+        print(f'Right dist {rdist}')
 
-        GPIO.output(Trigger, True)
-        time.sleep(0.00001)
-        GPIO.output(Trigger, False)
+
+def get_Fdistance():
+    time.sleep(sample_time)
+    GPIO.output(Trigger, True)
+    time.sleep(0.00001)
+    GPIO.output(Trigger,False)
+    start = time.time()
+    stop = time.time()
+    while GPIO.input(Fecho) == 0:
         start = time.time()
+    while GPIO.input(Fecho) == 1:
         stop = time.time()
-        while GPIO.input(LEcho) == 0:
-            start = time.time()
-        while GPIO.input(LEcho) == 1:
-            stop = time.time()
-        print(LSDist)
-        elapsed = stop - start
-        LSDist = elapsed * 17150  # speed of sound is 34300 cm/s
-        time.sleep(0.2)
+        
+    elapsed = stop - start
+    distance = elapsed * 17150 #speed of sound is 34300 cm/s
+    return distance
 
+def get_Ldistance():
+    time.sleep(sample_time)
+    GPIO.output(Trigger, True)
+    time.sleep(0.00001)
+    GPIO.output(Trigger,False)
+    start = time.time()
+    stop = time.time()
+    while GPIO.input(Lecho) == 0:
+        start = time.time()
+    while GPIO.input(Lecho) == 1:
+        stop = time.time()
+        
+    elapsed = stop - start
+    distance = elapsed * 17150 #speed of sound is 34300 cm/s
+    return distance
 
-
+def get_Rdistance():
+    time.sleep(sample_time)
+    GPIO.output(Trigger, True)
+    time.sleep(0.00001)
+    GPIO.output(Trigger,False)
+    start = time.time()
+    stop = time.time()
+    while GPIO.input(Recho) == 0:
+        start = time.time()
+    while GPIO.input(Recho) == 1:
+        stop = time.time()
+        
+    elapsed = stop - start
+    distance = elapsed * 17150 #speed of sound is 34300 cm/s
+    return distance
 
 def right_dc(num):
     p.ChangeDutyCycle(num)
