@@ -6,60 +6,60 @@ import time
 #import GeoFencing
 from enum import Enum
 
-class SensorData():
-    def __init__(self):
-        self.FEcho = 6
-        self.LEcho = 19
-        self.REcho = 9
-        self.Trigger = 18
-        self.sample_time = .3
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.Trigger, GPIO.OUT)
-        GPIO.setup(self.FEcho, GPIO.IN)
-        GPIO.setup(self.LEcho, GPIO.IN)
-        GPIO.setup(self.REcho, GPIO.IN)
-    def get_Fdist(self):
-        time.sleep(self.sample_time)
-        GPIO.output(self.Trigger, True)
-        time.sleep(0.00001)
-        GPIO.output(self.Trigger,False)
-        start = time.time()
-        stop = time.time()
-        while GPIO.input(self.FEcho) == 0:
-            start = time.time()
-        while GPIO.input(self.FEcho) == 1:
-            stop = time.time()
-        elapsed = stop - start
-        distance = elapsed * 17150 #speed of sound is 34300 cm/s
-        return distance
-    def get_Ldist(self):
-        time.sleep(self.sample_time)
-        GPIO.output(self.Trigger, True)
-        time.sleep(0.00001)
-        GPIO.output(self.Trigger,False)
-        start = time.time()
-        stop = time.time()
-        while GPIO.input(self.LEcho) == 0:
-            start = time.time()
-        while GPIO.input(self.LEcho) == 1:
-            stop = time.time()
-        elapsed = stop - start
-        distance = elapsed * 17150 #speed of sound is 34300 cm/s
-        return distance
-    def get_Rdist(self):
-        time.sleep(self.sample_time)
-        GPIO.output(self.Trigger, True)
-        time.sleep(0.00001)
-        GPIO.output(self.Trigger,False)
-        start = time.time()
-        stop = time.time()
-        while GPIO.input(self.REcho) == 0:
-            start = time.time()
-        while GPIO.input(self.REcho) == 1:
-            stop = time.time()
-        elapsed = stop - start
-        distance = elapsed * 17150 #speed of sound is 34300 cm/s
-        return distance
+# class SensorData():
+#     def __init__(self):
+#         self.FEcho = 6
+#         self.LEcho = 19
+#         self.REcho = 9
+#         self.Trigger = 18
+#         self.sample_time = .3
+#         GPIO.setmode(GPIO.BCM)
+#         GPIO.setup(self.Trigger, GPIO.OUT)
+#         GPIO.setup(self.FEcho, GPIO.IN)
+#         GPIO.setup(self.LEcho, GPIO.IN)
+#         GPIO.setup(self.REcho, GPIO.IN)
+#     def get_Fdist(self):
+#         time.sleep(self.sample_time)
+#         GPIO.output(self.Trigger, True)
+#         time.sleep(0.00001)
+#         GPIO.output(self.Trigger,False)
+#         start = time.time()
+#         stop = time.time()
+#         while GPIO.input(self.FEcho) == 0:
+#             start = time.time()
+#         while GPIO.input(self.FEcho) == 1:
+#             stop = time.time()
+#         elapsed = stop - start
+#         distance = elapsed * 17150 #speed of sound is 34300 cm/s
+#         return distance
+#     def get_Ldist(self):
+#         time.sleep(self.sample_time)
+#         GPIO.output(self.Trigger, True)
+#         time.sleep(0.00001)
+#         GPIO.output(self.Trigger,False)
+#         start = time.time()
+#         stop = time.time()
+#         while GPIO.input(self.LEcho) == 0:
+#             start = time.time()
+#         while GPIO.input(self.LEcho) == 1:
+#             stop = time.time()
+#         elapsed = stop - start
+#         distance = elapsed * 17150 #speed of sound is 34300 cm/s
+#         return distance
+#     def get_Rdist(self):
+#         time.sleep(self.sample_time)
+#         GPIO.output(self.Trigger, True)
+#         time.sleep(0.00001)
+#         GPIO.output(self.Trigger,False)
+#         start = time.time()
+#         stop = time.time()
+#         while GPIO.input(self.REcho) == 0:
+#             start = time.time()
+#         while GPIO.input(self.REcho) == 1:
+#             stop = time.time()
+#         elapsed = stop - start
+#         distance = elapsed * 17150 #speed of sound is 34300 cm/s
+#         return distance
     
 
 
@@ -242,7 +242,7 @@ def majorMotorControl(motorCommand):#This function will act as a deligator calli
 def followingWall():
     global dstFromWall
     global followWall
-    dstFromWall = LSDist;
+    dstFromWall = LSDist
     while followWall:
         if currentLat == startingLat and currentLon == startingLon and FSDist <= dstFromWall: # we will need to round the lat and lon to get  in the right ballpark
             followWall = False
@@ -261,23 +261,16 @@ def followingWall():
 
 
 def getSensorData():
-    global LSDist
-    Sensors = SensorData()
-    while 1:
-        fdist = Sensors.get_Fdist()
-        ldist = Sensors.get_Ldist()
-        rdist = Sensors.get_Rdist()
-        print(f'Front dist {fdist}')
-        print(f'Left dist {ldist}')
-        print(f'Right dist {rdist}')
+    fdist = get_Fdist()
+    ldist = get_Ldist()
+    rdist = get_Rdist()
+    print(f'Front dist {fdist}')
+    print(f'Left dist {ldist}')
+    print(f'Right dist {rdist}')
 
 
-def get_Fdistance():
-    FEcho = 6
-    Trigger = 18
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(FEcho, GPIO.IN)
-    GPIO.setup(Trigger, GPIO.OUT)
+
+def get_Fdist():
     time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
@@ -286,15 +279,17 @@ def get_Fdistance():
     stop = time.time()
     while GPIO.input(FEcho) == 0:
         start = time.time()
-        print('frontloop')
+    
+    
     while GPIO.input(FEcho) == 1:
         stop = time.time()
         
+    
     elapsed = stop - start
     distance = elapsed * 17150 #speed of sound is 34300 cm/s
     return distance
 
-def get_Ldistance():
+def get_Ldist():
     time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
@@ -302,16 +297,18 @@ def get_Ldistance():
     start = time.time()
     stop = time.time()
     while GPIO.input(LEcho) == 0:
-        print('leftloop')
         start = time.time()
+    
+    
     while GPIO.input(LEcho) == 1:
         stop = time.time()
         
+    
     elapsed = stop - start
     distance = elapsed * 17150 #speed of sound is 34300 cm/s
     return distance
 
-def get_Rdistance():
+def get_Rdist():
     time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
@@ -319,11 +316,13 @@ def get_Rdistance():
     start = time.time()
     stop = time.time()
     while GPIO.input(REcho) == 0:
-        print('rightloop')
         start = time.time()
+    
+    
     while GPIO.input(REcho) == 1:
         stop = time.time()
         
+    
     elapsed = stop - start
     distance = elapsed * 17150 #speed of sound is 34300 cm/s
     return distance
@@ -418,16 +417,16 @@ def dir_sr():
 
 #main thread for the program
 try:
-    try:
-        # _thread.start_new_thread(getGPSData,())
-        _thread.start_new_thread(getSensorData, ())
-        _thread.start_new_thread(followingWall, ())
-    except:
-        print("Error unable to start thread")
+    # try:
+    #     # _thread.start_new_thread(getGPSData,())
+    #     _thread.start_new_thread(followingWall, ())
+    # except:
+    #     print("Error unable to start thread")
 
 
     while 1:
-        time.sleep(1)
+        getSensorData()
+        time.sleep(0.5)
 except KeyboardInterrupt:
     GPIO.cleanup()
 except:
