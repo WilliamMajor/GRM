@@ -37,7 +37,7 @@ dstFromWall = 200
 LSDist = 0
 RSDist = 0
 FSDist = 0
-sample_time = .01
+sample_time = 1
 
 #define all needed GPIO shit
 # trigger pin number they need to be changed to the pin to be used do we just need one trigger pin for all of them???
@@ -215,15 +215,20 @@ def getSensorData():
 
 
 def get_Fdistance():
+    FEcho = 6
+    print(f'Fecho {FEcho}')
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(FEcho, GPIO.IN)
     time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
     GPIO.output(Trigger,False)
     start = time.time()
     stop = time.time()
-    while GPIO.input(Fecho) == 0:
+    while GPIO.input(FEcho) == 0:
         start = time.time()
-    while GPIO.input(Fecho) == 1:
+        print('frontloop')
+    while GPIO.input(FEcho) == 1:
         stop = time.time()
         
     elapsed = stop - start
@@ -237,9 +242,10 @@ def get_Ldistance():
     GPIO.output(Trigger,False)
     start = time.time()
     stop = time.time()
-    while GPIO.input(Lecho) == 0:
+    while GPIO.input(LEcho) == 0:
+        print('leftloop')
         start = time.time()
-    while GPIO.input(Lecho) == 1:
+    while GPIO.input(LEcho) == 1:
         stop = time.time()
         
     elapsed = stop - start
@@ -253,9 +259,10 @@ def get_Rdistance():
     GPIO.output(Trigger,False)
     start = time.time()
     stop = time.time()
-    while GPIO.input(Recho) == 0:
+    while GPIO.input(REcho) == 0:
+        print('rightloop')
         start = time.time()
-    while GPIO.input(Recho) == 1:
+    while GPIO.input(REcho) == 1:
         stop = time.time()
         
     elapsed = stop - start
