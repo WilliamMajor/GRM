@@ -271,6 +271,7 @@ def getSensorData():
 
 
 def get_Fdist():
+    print("hello")
     time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
@@ -279,12 +280,9 @@ def get_Fdist():
     stop = time.time()
     while GPIO.input(FEcho) == 0:
         start = time.time()
-    
-    
+        print("fuck")
     while GPIO.input(FEcho) == 1:
         stop = time.time()
-        
-    
     elapsed = stop - start
     distance = elapsed * 17150 #speed of sound is 34300 cm/s
     return distance
