@@ -122,7 +122,7 @@ in8 = 7
 
 start_dc = 75 #define the starting motorspeed
 
-GPIO.setmode(GPIO.BCM)#set the gpio to be defined by gpio number not pin number
+# GPIO.setmode(GPIO.BCM)#set the gpio to be defined by gpio number not pin number
 
 #setup for sensors
 GPIO.setup(Trigger, GPIO.OUT)
@@ -188,6 +188,7 @@ def getGPSData():#The program to get the gps data goes here
             rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
             if len(rl) > 0:
                 # Print data from stdout
+                data = stdout.channel.recv(1024)
                 if(type(data) != str ):
                     data = data.decode("utf-8")
                 data = stdout.channel.recv(1024)
