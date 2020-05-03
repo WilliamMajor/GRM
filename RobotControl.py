@@ -136,7 +136,7 @@ except:
 
 
 def getGPSData():#The program to get the gps data goes here
-    host = "192.168.1.81"
+    host = "169.254.20.224"
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -187,17 +187,22 @@ def getGPSData():#The program to get the gps data goes here
 def majorMotorControl(motorCommand):#This function will act as a deligator calling different controls based on the value passed to it from the master thread
     controls = {
         0: #Forward
-            print("filler"),
+            print("forward")
+            forward(),
         1: #TurnRight
-            print("filler"),
+            print("pright")
+            pright(),
         2: #TurnLeft
-            print("filler"),
+            print("pleft")
+            pleft(),
         3: #Stop
-            print("filler"),
+            print("stop")
+            stop(),
         4: #StartMotors
-            print("filler"),
+            print("start"),
         5: #Overdrive
-            print("filler"),
+            overdrive()
+            print("overdrive"),
     }
 
 
@@ -340,6 +345,9 @@ def pleft():
     GPIO.output(in6,GPIO.LOW)
     GPIO.output(in7,GPIO.HIGH)
     GPIO.output(in8,GPIO.HIGH)
+
+def overdrive():
+    change_dc(100)
 
 def pright():
     GPIO.output(in1,GPIO.HIGH)
