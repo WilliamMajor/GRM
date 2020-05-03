@@ -239,7 +239,7 @@ def getRSensorData():
 
 def getFSensorData():
     global FSDist
-    while not ending:
+    while 1:
         GPIO.output(Trigger, True)
         time.sleep(0.00001)
         GPIO.output(Trigger, False)
