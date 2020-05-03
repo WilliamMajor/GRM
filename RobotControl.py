@@ -204,7 +204,7 @@ def followingWall():
 
 def getLSensorData():
     global LSDist
-    while not ending:
+    while 1:
         print("Hello fucker")
         GPIO.output(Trigger, True)
         time.sleep(0.00001)
