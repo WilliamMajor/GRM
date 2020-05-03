@@ -6,6 +6,62 @@ import time
 #import GeoFencing
 from enum import Enum
 
+class SensorData():
+    def __init__(self_):
+        self.FEcho = 6
+        self.LEcho = 19
+        self.REcho = 9
+        self.Trigger = 18
+        self.sample_time = .3
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.Trigger, GPIO.OUT)
+        GPIO.setup(self.FEcho, GPIO.IN)
+        GPIO.setup(self.LEcho, GPIO.IN)
+        GPIO.setup(self.REcho, GPIO.IN)
+    def get_Fdist():
+        time.sleep(self.sample_time)
+        GPIO.output(self.Trigger, True)
+        time.sleep(0.00001)
+        GPIO.output(self.Trigger,False)
+        start = time.time()
+        stop = time.time()
+        while GPIO.input(self.FEcho) == 0:
+            start = time.time()
+        while GPIO.input(self.FEcho) == 1:
+            stop = time.time()
+        elapsed = stop - start
+        distance = elapsed * 17150 #speed of sound is 34300 cm/s
+        return distance
+    def get_Ldist():
+        time.sleep(self.sample_time)
+        GPIO.output(self.Trigger, True)
+        time.sleep(0.00001)
+        GPIO.output(self.Trigger,False)
+        start = time.time()
+        stop = time.time()
+        while GPIO.input(self.LEcho) == 0:
+            start = time.time()
+        while GPIO.input(self.LEcho) == 1:
+            stop = time.time()
+        elapsed = stop - start
+        distance = elapsed * 17150 #speed of sound is 34300 cm/s
+        return distance
+    def get_Rdist():
+        time.sleep(self.sample_time)
+        GPIO.output(self.Trigger, True)
+        time.sleep(0.00001)
+        GPIO.output(self.Trigger,False)
+        start = time.time()
+        stop = time.time()
+        while GPIO.input(self.REcho) == 0:
+            start = time.time()
+        while GPIO.input(self.REcho) == 1:
+            stop = time.time()
+        elapsed = stop - start
+        distance = elapsed * 17150 #speed of sound is 34300 cm/s
+        return distance
+    
+
 
 class Direction(Enum):
     Forward = 0
@@ -205,10 +261,11 @@ def followingWall():
 
 def getSensorData():
     global LSDist
+    Sensors = SensorData()
     while 1:
-        fdist = get_Fdistance()
-        ldist = get_Ldistance()
-        rdist = get_Rdistance()
+        fdist = Sensors.get_Fdist()
+        ldist = Sensors.get_Ldist()
+        rdist = Sensors.get_Rdist()
         print(f'Front dist {fdist}')
         print(f'Left dist {ldist}')
         print(f'Right dist {rdist}')
