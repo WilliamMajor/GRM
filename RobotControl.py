@@ -216,9 +216,10 @@ def getSensorData():
 
 def get_Fdistance():
     FEcho = 6
-    print(f'Fecho {FEcho}')
+    Trigger = 18
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(FEcho, GPIO.IN)
+    GPIO.setup(Trigger, GPIO.OUT)
     time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
