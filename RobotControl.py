@@ -69,15 +69,13 @@ GPIO.setmode(GPIO.BCM)#set the gpio to be defined by gpio number not pin number
 
 #setup for sensors
 GPIO.setup(Trigger, GPIO.OUT)
-GPIO.setup(LSFEcho, GPIO.IN)
+GPIO.setup(FEcho, GPIO.IN)
 
-GPIO.setup(LSBEcho, GPIO.IN)
+GPIO.setup(LEcho, GPIO.IN)
 
-GPIO.setup(RSFEcho, GPIO.IN)
+GPIO.setup(REcho, GPIO.IN)
 
-GPIO.setup(RSBEcho, GPIO.IN)
 
-GPIO.setup(FSEcho, GPIO.IN)
 
 #setup for motors
 #right wheel setup
@@ -187,22 +185,18 @@ def getGPSData():#The program to get the gps data goes here
 def majorMotorControl(motorCommand):#This function will act as a deligator calling different controls based on the value passed to it from the master thread
     controls = {
         0: #Forward
-            print("forward")
+            
             forward(),
         1: #TurnRight
-            print("pright")
             pright(),
         2: #TurnLeft
-            print("pleft")
             pleft(),
         3: #Stop
-            print("stop")
             stop(),
         4: #StartMotors
             print("start"),
         5: #Overdrive
-            overdrive()
-            print("overdrive"),
+            overdrive(),
     }
 
 
@@ -221,7 +215,7 @@ def followingWall():
             majorMotorControl(Direction.Right)
         if LSDist < dstFromWall - 10 and LSDist > (dstFromWall - 60): ## we are drifing in to the left
             print("need to turn slightly right")
-        elif LSD > dstFromWall + 10:
+        elif LSDist > dstFromWall + 10:
             print("need to turn slightly left ")
 
 
@@ -304,6 +298,7 @@ def start_dc1():
     p3.ChangeDutyCycle(start_dc)
     p4.ChangeDutyCycle(start_dc)
 def forward():
+    print('foward')
     GPIO.output(in1,GPIO.HIGH)
     GPIO.output(in2,GPIO.HIGH)
     GPIO.output(in3,GPIO.LOW)
