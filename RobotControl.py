@@ -1,5 +1,5 @@
 import RPi.GPIO as GPIO
-import _thread
+import threading
 import paramiko
 import select
 import time
@@ -259,17 +259,18 @@ def followingWall():
 
 
 def getSensorData():
-    fdist = get_Fdist()
-    ldist = get_Ldist()
-    rdist = get_Rdist()
-    print(f'Front dist {fdist}')
-    print(f'Left dist {ldist}')
-    print(f'Right dist {rdist}')
+    while 1:
+        fdist = get_Fdist()
+        ldist = get_Ldist()
+        rdist = get_Rdist()
+        print(f'Front dist {fdist}')
+        print(f'Left dist {ldist}')
+        print(f'Right dist {rdist}')
+        time.sleep(0.3)
 
 
 
 def get_Fdist():
-    print("hello")
     time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
@@ -278,7 +279,6 @@ def get_Fdist():
     stop = time.time()
     while GPIO.input(FEcho) == 0:
         start = time.time()
-        print("fuck")
     while GPIO.input(FEcho) == 1:
         stop = time.time()
     elapsed = stop - start
@@ -413,11 +413,14 @@ def dir_sr():
 
 #main thread for the program
 try:
-    # try:
-    #     # _thread.start_new_thread(getGPSData,())
-    #     _thread.start_new_thread(followingWall, ())
-    # except:
-    #     print("Error unable to start thread")
+    try:
+        # _thread.start_new_thread(getGPSData,())
+        # _thread.start_new_thread(followingWall, ())
+        t1 = threading.Thread(target=getSensorData)
+        t1.start()
+        
+    except:
+        print("Error unable to start thread")
 
 
     while 1:
