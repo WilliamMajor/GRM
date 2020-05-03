@@ -115,9 +115,9 @@ try:
     try:
         # _thread.start_new_thread(getGPSData,())
         _thread.start_new_thread(getLSensorData, ())
-        _thread.start_new_thread(getRSensorData, ())
-        _thread.start_new_thread(getFSensorData, ())
-        _thread.start_new_thread(followingWall, ())
+        # _thread.start_new_thread(getRSensorData, ())
+        # _thread.start_new_thread(getFSensorData, ())
+        # _thread.start_new_thread(followingWall, ())
     except:
         print("Error unable to start thread")
 
