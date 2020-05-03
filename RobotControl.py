@@ -7,7 +7,7 @@ import time
 from enum import Enum
 
 class SensorData():
-    def __init__(self_):
+    def __init__(self):
         self.FEcho = 6
         self.LEcho = 19
         self.REcho = 9
@@ -18,7 +18,7 @@ class SensorData():
         GPIO.setup(self.FEcho, GPIO.IN)
         GPIO.setup(self.LEcho, GPIO.IN)
         GPIO.setup(self.REcho, GPIO.IN)
-    def get_Fdist():
+    def get_Fdist(self):
         time.sleep(self.sample_time)
         GPIO.output(self.Trigger, True)
         time.sleep(0.00001)
@@ -32,7 +32,7 @@ class SensorData():
         elapsed = stop - start
         distance = elapsed * 17150 #speed of sound is 34300 cm/s
         return distance
-    def get_Ldist():
+    def get_Ldist(self):
         time.sleep(self.sample_time)
         GPIO.output(self.Trigger, True)
         time.sleep(0.00001)
@@ -46,7 +46,7 @@ class SensorData():
         elapsed = stop - start
         distance = elapsed * 17150 #speed of sound is 34300 cm/s
         return distance
-    def get_Rdist():
+    def get_Rdist(self):
         time.sleep(self.sample_time)
         GPIO.output(self.Trigger, True)
         time.sleep(0.00001)
