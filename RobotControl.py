@@ -110,25 +110,7 @@ p4 = GPIO.PWM(en4, 1000)#front left motor pwm signal
 
 
 
-#main thread for the program
-try:
-    try:
-        # _thread.start_new_thread(getGPSData,())
-        _thread.start_new_thread(getLSensorData, ())
-        # _thread.start_new_thread(getRSensorData, ())
-        # _thread.start_new_thread(getFSensorData, ())
-        # _thread.start_new_thread(followingWall, ())
-    except:
-        print("Error unable to start thread")
 
-
-    while not ending:
-        time.sleep(1)
-    GPIO.cleanup()
-except KeyboardInterrupt:
-    GPIO.cleanup()
-except:
-    GPIO.cleanup()
 
 
 
@@ -357,3 +339,24 @@ def pright():
 def dir_sr():
     left_dc(70)
     right_dc(10)
+
+
+#main thread for the program
+try:
+    try:
+        # _thread.start_new_thread(getGPSData,())
+        _thread.start_new_thread(getLSensorData, ())
+        _thread.start_new_thread(getRSensorData, ())
+        _thread.start_new_thread(getFSensorData, ())
+        _thread.start_new_thread(followingWall, ())
+    except:
+        print("Error unable to start thread")
+
+
+    while not ending:
+        time.sleep(1)
+    GPIO.cleanup()
+except KeyboardInterrupt:
+    GPIO.cleanup()
+except:
+    GPIO.cleanup()
