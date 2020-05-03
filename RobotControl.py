@@ -1,5 +1,5 @@
 import RPi.GPIO as GPIO
-import _thread
+import threading
 import paramiko
 import select
 import time
@@ -419,15 +419,16 @@ def dir_sr():
 try:
     try:
         # _thread.start_new_thread(getGPSData,())
-        _thread.start_new_thread(getSensorData, ())
-        _thread.start_new_thread(followingWall, ())
+        t1 = threading.Thread(target=getSensorData)
+        t1.start()
+        # _thread.start_new_thread(getSensorData, ())
+        # _thread.start_new_thread(followingWall, ())
     except:
         print("Error unable to start thread")
 
 
     while not ending:
         time.sleep(1)
-    GPIO.cleanup()
 except KeyboardInterrupt:
     GPIO.cleanup()
 except:
