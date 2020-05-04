@@ -266,7 +266,7 @@ def getSensorData():
         FSDist = get_Fdist()
         LSDist = get_Ldist()
         RSDist = get_Rdist()
-        time.sleep(0.3)
+        time.sleep(0.1)
 
 
 
@@ -282,7 +282,7 @@ def get_Fdist():
         stop = time.time()
     elapsed = stop - start
     distance = elapsed * 17150 #speed of sound is 34300 cm/s
-    return distance
+    return round(distance, 2)
 
 def get_Ldist():
     GPIO.output(Trigger, True)
@@ -300,7 +300,7 @@ def get_Ldist():
     
     elapsed = stop - start
     distance = elapsed * 17150 #speed of sound is 34300 cm/s
-    return distance
+    return round(distance, 2)
 
 def get_Rdist():
     GPIO.output(Trigger, True)
@@ -318,7 +318,7 @@ def get_Rdist():
     
     elapsed = stop - start
     distance = elapsed * 17150 #speed of sound is 34300 cm/s
-    return distance
+    return round(distance, 2)
 
 def right_dc(num):
     p.ChangeDutyCycle(num)
@@ -413,8 +413,11 @@ try:
     try:
         # _thread.start_new_thread(getGPSData,())
         # _thread.start_new_thread(followingWall, ())
+        
         t1 = threading.Thread(target=getSensorData)
+        t2 = threading.Thread(target=followingWall)
         t1.start()
+        t2.start()
         
     except:
         print("Error unable to start thread")
