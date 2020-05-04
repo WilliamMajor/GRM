@@ -333,6 +333,7 @@ def half_dc():
     p3.ChangeDutyCycle(15)
     p4.ChangeDutyCycle(15)
 def change_dc(num):
+    print(f'changing DC to {num}')
     p.ChangeDutyCycle(num)
     p2.ChangeDutyCycle(num)
     p3.ChangeDutyCycle(num)
@@ -344,6 +345,7 @@ def start_dc1():
     p3.ChangeDutyCycle(start_dc)
     p4.ChangeDutyCycle(start_dc)
 def forward():
+    print('foward')
     GPIO.output(in1,GPIO.LOW)
     GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3,GPIO.HIGH)
@@ -352,6 +354,10 @@ def forward():
     GPIO.output(in6,GPIO.HIGH)
     GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
+
+def overdrive():
+    print('overdrive mode')
+    change_dc(100)
 
 def backward():
     print("backward")
@@ -414,9 +420,9 @@ try:
         # _thread.start_new_thread(followingWall, ())
         
         t1 = threading.Thread(target=getSensorData)
-        #t2 = threading.Thread(target=followingWall)
+        t2 = threading.Thread(target=followingWall)
         t1.start()
-       # t2.start()
+        t2.start()
         
     except:
         print("Error unable to start thread")
