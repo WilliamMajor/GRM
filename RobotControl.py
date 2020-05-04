@@ -259,13 +259,13 @@ def followingWall():
 
 
 def getSensorData():
+    global LSDist
+    global RSDist
+    global FSDist
     while 1:
-        fdist = get_Fdist()
-        ldist = get_Ldist()
-        rdist = get_Rdist()
-        print(f'Front dist {fdist}')
-        print(f'Left dist {ldist}')
-        print(f'Right dist {rdist}')
+        FSDist = get_Fdist()
+        LSDist = get_Ldist()
+        RSDist = get_Rdist()
         time.sleep(0.3)
 
 
@@ -424,8 +424,10 @@ try:
 
 
     while 1:
-        getSensorData()
-        time.sleep(0.5)
+        time.sleep(.5)
+        print(FSDist)
+        print(LSDist)
+        print(RSDist)
 except KeyboardInterrupt:
     GPIO.cleanup()
 except:
