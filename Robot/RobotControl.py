@@ -3,63 +3,10 @@ import threading
 import paramiko
 import select
 import time
-#import GeoFencing
+import GeoFencing
 from enum import Enum
 
-# class SensorData():
-#     def __init__(self):
-#         self.FEcho = 6
-#         self.LEcho = 19
-#         self.REcho = 9
-#         self.Trigger = 18
-#         self.sample_time = .3
-#         GPIO.setmode(GPIO.BCM)
-#         GPIO.setup(self.Trigger, GPIO.OUT)
-#         GPIO.setup(self.FEcho, GPIO.IN)
-#         GPIO.setup(self.LEcho, GPIO.IN)
-#         GPIO.setup(self.REcho, GPIO.IN)
-#     def get_Fdist(self):
-#         time.sleep(self.sample_time)
-#         GPIO.output(self.Trigger, True)
-#         time.sleep(0.00001)
-#         GPIO.output(self.Trigger,False)
-#         start = time.time()
-#         stop = time.time()
-#         while GPIO.input(self.FEcho) == 0:
-#             start = time.time()
-#         while GPIO.input(self.FEcho) == 1:
-#             stop = time.time()
-#         elapsed = stop - start
-#         distance = elapsed * 17150 #speed of sound is 34300 cm/s
-#         return distance
-#     def get_Ldist(self):
-#         time.sleep(self.sample_time)
-#         GPIO.output(self.Trigger, True)
-#         time.sleep(0.00001)
-#         GPIO.output(self.Trigger,False)
-#         start = time.time()
-#         stop = time.time()
-#         while GPIO.input(self.LEcho) == 0:
-#             start = time.time()
-#         while GPIO.input(self.LEcho) == 1:
-#             stop = time.time()
-#         elapsed = stop - start
-#         distance = elapsed * 17150 #speed of sound is 34300 cm/s
-#         return distance
-#     def get_Rdist(self):
-#         time.sleep(self.sample_time)
-#         GPIO.output(self.Trigger, True)
-#         time.sleep(0.00001)
-#         GPIO.output(self.Trigger,False)
-#         start = time.time()
-#         stop = time.time()
-#         while GPIO.input(self.REcho) == 0:
-#             start = time.time()
-#         while GPIO.input(self.REcho) == 1:
-#             stop = time.time()
-#         elapsed = stop - start
-#         distance = elapsed * 17150 #speed of sound is 34300 cm/s
-#         return distance
+
     
 
 
@@ -170,6 +117,10 @@ p4.start(start_dc)
 
 
 def getGPSData():#The program to get the gps data goes here
+    global startingLat
+    global startingLon
+    global currentLat
+    global currentLon
     host = "169.254.20.224"
     try:
         ssh = paramiko.SSHClient()
@@ -220,20 +171,23 @@ def getGPSData():#The program to get the gps data goes here
 
 #Motor Control Functions
 def majorMotorControl(motorCommand):#This function will act as a deligator calling different controls based on the value passed to it from the master thread
-    controls = {
-        0: #Forward
-            
-            forward(),
-        1: #TurnRight
-            pright(),
-        2: #TurnLeft
-            pleft(),
-        3: stop(),
-        4: #StartMotors
-            print("start"),
-        5: #Overdrive
-            overdrive(),
-    }
+    if(motorCommand == 0):
+        print("forward")
+        forward()
+    elif(motorCommand == 1):
+        print("turnright")
+        pright()
+    elif(motorCommand == 2):
+        print("turnright")
+        pleft()
+    elif(motorCommand == 3):
+        print("stop")
+        stop()
+    elif(motorCommand == 4):
+        print("startMotors")
+    elif(motorCommand == 5):
+        print("Overdrive")
+        overdrive()
 
 
 def followingWall():
