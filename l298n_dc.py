@@ -137,10 +137,13 @@ def pright():
     GPIO.output(in6,GPIO.LOW)
     GPIO.output(in7,GPIO.HIGH)
     GPIO.output(in8,GPIO.HIGH)
+def dir_sl():
+    left_dc(80)
+    right_dc(70)
 
 def dir_sr():
     left_dc(70)
-    right_dc(10)
+    right_dc(80)
 
 while(1):
     print('---Right Wheels---')
@@ -196,7 +199,7 @@ while(1):
         
     
     elif x == 'pleft':
-        change_dc(100)
+        change_dc(80)
         pleft()
         sleep(.7)
         
@@ -226,8 +229,7 @@ while(1):
         
         
     elif x == 'sl': #slight left, they're different right now because im' experimenting with things
-        left_dc(50)
-        right_dc(75)
+        dir_sl()
         forward()
         
     elif x=='b':
