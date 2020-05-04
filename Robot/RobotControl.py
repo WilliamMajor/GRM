@@ -213,10 +213,10 @@ def followingWall():
         if FSDist <= dstFromWall:
             print('calling pright')
             pright()
-        elif LSDist < dstFromWall - 20): #and LSDist > (dstFromWall - 60): ## we are drifing in to the left
+        elif LSDist < dstFromWall - 20 and LSDist > (dstFromWall - 60): ## we are drifing in to the left
             print("need to turn slightly right")
             dir_sr()
-        elif LSDist > dstFromWall + 100:
+        elif LSDist > dstFromWall + 30:
             print("need to turn slightly left ")
             dir_sl()
 
@@ -424,14 +424,14 @@ def control_test():
             print("walk")
             change_dc(90)
             forward()
-            sleep(.30)
+            time.sleep(0.30)
             change_dc(40)
             temp1=1
         elif x== 'wb':
             print("walk backward")
             change_dc(90)
             backward()
-            sleep(.30)
+            time.sleep(0.30)
             change_dc(55)
             temp1=0
             
@@ -459,7 +459,7 @@ def control_test():
 
         elif x == 'sr': #slight right
             dir_sr()
-            sleep(.3)
+            time.sleep(0.3)
             
             
             
