@@ -237,10 +237,13 @@ def majorMotorControl(motorCommand):#This function will act as a deligator calli
 
 
 def followingWall():
+    while LSDist == 0:
+        time.sleep(0.2)
     change_dc(75)
     forward()
     global dstFromWall
     global followWall
+
     dstFromWall = LSDist
     while followWall:
         if currentLat == startingLat and currentLon == startingLon and FSDist <= dstFromWall: # we will need to round the lat and lon to get  in the right ballpark
@@ -279,7 +282,6 @@ def get_Fdist():
     stop = time.time()
     while GPIO.input(FEcho) == 0:
         start = time.time()
-        print('front loop')
     while GPIO.input(FEcho) == 1:
         stop = time.time()
     elapsed = stop - start
@@ -294,13 +296,8 @@ def get_Ldist():
     stop = time.time()
     while GPIO.input(LEcho) == 0:
         start = time.time()
-        print('left loop')
-    
-    
     while GPIO.input(LEcho) == 1:
         stop = time.time()
-        
-    
     elapsed = stop - start
     distance = elapsed * 17150 #speed of sound is 34300 cm/s
     return round(distance, 2)
@@ -313,13 +310,8 @@ def get_Rdist():
     stop = time.time()
     while GPIO.input(REcho) == 0:
         start = time.time()
-        print('right loop')
-    
-    
     while GPIO.input(REcho) == 1:
         stop = time.time()
-        
-    
     elapsed = stop - start
     distance = elapsed * 17150 #speed of sound is 34300 cm/s
     return round(distance, 2)
