@@ -421,19 +421,18 @@ def dir_sl():
 
 #main thread for the program
 try:
-    # try:
-    #     # _thread.start_new_thread(getGPSData,())
-    #     # _thread.start_new_thread(followingWall, ())
+    try:
+        # _thread.start_new_thread(getGPSData,())
+        # _thread.start_new_thread(followingWall, ())
         
-    #     # t1 = threading.Thread(target=getSensorData)
-    #     # t2 = threading.Thread(target=followingWall)
-    #     # t1.start()
-    #     # t2.start()
+        t1 = threading.Thread(target=getSensorData)
+        t2 = threading.Thread(target=followingWall)
+        t1.start()
+        t2.start()
         
-    # except:
-    #     print("Error unable to start thread")
+    except:
+        print("Error unable to start thread")
 
-    forward()
     while 1:
         time.sleep(1)
         
