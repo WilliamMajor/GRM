@@ -242,7 +242,8 @@ def followingWall():
     forward()
     global dstFromWall
     global followWall
-
+    while(LSDist == 0):
+        time.sleep(0.2)
     dstFromWall = LSDist
     print(dstFromWall)
     time.sleep(3)
@@ -256,10 +257,10 @@ def followingWall():
             majorMotorControl(Direction.Left)#turn left to continue following eh wall
         if FSDist <= dstFromWall:
             majorMotorControl(Direction.Right)
-        # if LSDist < dstFromWall - 10 and LSDist > (dstFromWall - 60): ## we are drifing in to the left
-        #     # print("need to turn slightly right")
-        # elif LSDist > dstFromWall + 10:
-            # print("need to turn slightly left ")
+        if LSDist < dstFromWall - 10 and LSDist > (dstFromWall - 60): ## we are drifing in to the left
+            print("need to turn slightly right")
+        elif LSDist > dstFromWall + 10:
+            print("need to turn slightly left ")
 
 
 
@@ -435,13 +436,6 @@ try:
 
     while 1:
         time.sleep(1)
-        print("Left")
-        print(LSDist)
-        print("\n\nRight")
-        print(RSDist)
-        print("\n\nFront")
-        print(FSDist)
-        print("\n\n")
         
 except KeyboardInterrupt:
     GPIO.cleanup()
