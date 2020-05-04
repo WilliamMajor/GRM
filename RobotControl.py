@@ -163,10 +163,10 @@ p2 = GPIO.PWM(en2, 1000)#front right motor pwm signal
 p3 = GPIO.PWM(en3, 1000)#back left motor pwm signal
 p4 = GPIO.PWM(en4, 1000)#front left motor pwm signal
 
-
-
-
-
+p.start(start_dc) 
+p2.start(start_dc)
+p3.start(start_dc)
+p4.start(start_dc)
 
 
 def getGPSData():#The program to get the gps data goes here
