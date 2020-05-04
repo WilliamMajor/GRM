@@ -228,8 +228,7 @@ def majorMotorControl(motorCommand):#This function will act as a deligator calli
             pright(),
         2: #TurnLeft
             pleft(),
-        3: #Stop
-            stop(),
+        3: stop(),
         4: #StartMotors
             print("start"),
         5: #Overdrive
@@ -238,6 +237,8 @@ def majorMotorControl(motorCommand):#This function will act as a deligator calli
 
 
 def followingWall():
+    change_dc(75)
+    forward()
     global dstFromWall
     global followWall
     dstFromWall = LSDist
@@ -347,18 +348,6 @@ def start_dc1():
     p3.ChangeDutyCycle(start_dc)
     p4.ChangeDutyCycle(start_dc)
 def forward():
-    print('foward')
-    GPIO.output(in1,GPIO.HIGH)
-    GPIO.output(in2,GPIO.HIGH)
-    GPIO.output(in3,GPIO.LOW)
-    GPIO.output(in4,GPIO.LOW)
-    GPIO.output(in5,GPIO.LOW)
-    GPIO.output(in6,GPIO.LOW)
-    GPIO.output(in7,GPIO.HIGH)
-    GPIO.output(in8,GPIO.HIGH)
-
-def backward():
-    print("backward")
     GPIO.output(in1,GPIO.LOW)
     GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3,GPIO.HIGH)
@@ -367,6 +356,17 @@ def backward():
     GPIO.output(in6,GPIO.HIGH)
     GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
+
+def backward():
+    print("backward")
+    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.HIGH)
+    GPIO.output(in8,GPIO.HIGH)
     temp1=0
 
 def stop():
@@ -381,19 +381,6 @@ def stop():
     GPIO.output(in8,GPIO.LOW)
 
 def pleft():
-    GPIO.output(in1,GPIO.LOW)
-    GPIO.output(in2,GPIO.LOW)
-    GPIO.output(in3,GPIO.HIGH)
-    GPIO.output(in4,GPIO.HIGH)
-    GPIO.output(in5,GPIO.LOW)
-    GPIO.output(in6,GPIO.LOW)
-    GPIO.output(in7,GPIO.HIGH)
-    GPIO.output(in8,GPIO.HIGH)
-
-def overdrive():
-    change_dc(100)
-
-def pright():
     GPIO.output(in1,GPIO.HIGH)
     GPIO.output(in2,GPIO.HIGH)
     GPIO.output(in3,GPIO.LOW)
@@ -402,6 +389,16 @@ def pright():
     GPIO.output(in6,GPIO.HIGH)
     GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
+
+def pright():
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.HIGH)
+    GPIO.output(in4,GPIO.HIGH)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.HIGH)
+    GPIO.output(in8,GPIO.HIGH)
 
 
 def dir_sr():
@@ -431,9 +428,7 @@ try:
 
     while 1:
         time.sleep(.5)
-        print(FSDist)
-        print(LSDist)
-        print(RSDist)
+        
 except KeyboardInterrupt:
     GPIO.cleanup()
 except:
