@@ -93,7 +93,7 @@ dstFromWall = 200
 LSDist = 0
 RSDist = 0
 FSDist = 0
-sample_time = 1
+sample_time = 0.3
 
 #define all needed GPIO shit
 # trigger pin number they need to be changed to the pin to be used do we just need one trigger pin for all of them???
@@ -277,6 +277,7 @@ def getSensorData():
 
 
 def get_Fdist():
+    time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
     GPIO.output(Trigger,False)
@@ -291,6 +292,7 @@ def get_Fdist():
     return round(distance, 2)
 
 def get_Ldist():
+    time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
     GPIO.output(Trigger,False)
@@ -305,6 +307,7 @@ def get_Ldist():
     return round(distance, 2)
 
 def get_Rdist():
+    time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
     GPIO.output(Trigger,False)
