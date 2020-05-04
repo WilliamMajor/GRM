@@ -22,6 +22,7 @@ class Direction(Enum):
 ending = False
 turning = False
 followWall = True
+sharpLeft = False
 
 #Gobal values for the lat and lon that we will be using
 startingLat = 0
@@ -212,10 +213,10 @@ def followingWall():
         if FSDist <= dstFromWall:
             print('calling pright')
             pright()
-        elif LSDist < dstFromWall - 20 and LSDist > (dstFromWall - 60): ## we are drifing in to the left
+        elif LSDist < dstFromWall - 20): #and LSDist > (dstFromWall - 60): ## we are drifing in to the left
             print("need to turn slightly right")
             dir_sr()
-        elif LSDist > dstFromWall + 30:
+        elif LSDist > dstFromWall + 100:
             print("need to turn slightly left ")
             dir_sl()
 
@@ -355,7 +356,7 @@ def pleft():
     GPIO.output(in6,GPIO.HIGH)
     GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
-    sleep(.7)
+    time.sleep(0.7)
     stop()
 
 def pright():
@@ -368,7 +369,7 @@ def pright():
     GPIO.output(in6,GPIO.LOW)
     GPIO.output(in7,GPIO.HIGH)
     GPIO.output(in8,GPIO.HIGH)
-    sleep(.7)
+    time.sleep(0.7)
     stop()
 
 
