@@ -237,20 +237,21 @@ def majorMotorControl(motorCommand):#This function will act as a deligator calli
 
 
 def followingWall():
-    while LSDist == 0:
-        time.sleep(0.2)
+    time.sleep(4)
     change_dc(75)
     forward()
     global dstFromWall
     global followWall
 
     dstFromWall = LSDist
+    print(dstFromWall)
     while followWall:
         if currentLat == startingLat and currentLon == startingLon and FSDist <= dstFromWall: # we will need to round the lat and lon to get  in the right ballpark
             followWall = False
             break
 
         if LSDist > 200: #this should be close to max range of the sensor so we know when basically there is nothing there
+            print("calling left turn")
             majorMotorControl(Direction.Left)#turn left to continue following eh wall
         if FSDist <= dstFromWall:
             majorMotorControl(Direction.Right)
