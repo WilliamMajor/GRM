@@ -86,6 +86,8 @@ def start_dc1():
     p3.ChangeDutyCycle(start_dc)
     p4.ChangeDutyCycle(start_dc)
 def forward():
+    left_dc(76)
+    right_dc(75)
     GPIO.output(in1,GPIO.LOW)
     GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3,GPIO.HIGH)
@@ -119,6 +121,7 @@ def stop():
     GPIO.output(in8,GPIO.LOW)
 
 def pleft():
+    change_dc(80)
     GPIO.output(in1,GPIO.HIGH)
     GPIO.output(in2,GPIO.HIGH)
     GPIO.output(in3,GPIO.LOW)
@@ -127,8 +130,11 @@ def pleft():
     GPIO.output(in6,GPIO.HIGH)
     GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
+    sleep(.7)
+    stop()
 
 def pright():
+    change_dc(80)
     GPIO.output(in1,GPIO.LOW)
     GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3,GPIO.HIGH)
@@ -137,6 +143,8 @@ def pright():
     GPIO.output(in6,GPIO.LOW)
     GPIO.output(in7,GPIO.HIGH)
     GPIO.output(in8,GPIO.HIGH)
+    sleep(.7)
+    stop()
 def dir_sl():
     left_dc(80)
     right_dc(70)
@@ -167,8 +175,7 @@ while(1):
     x=input()
     
     if x=='r':
-        left_dc(76)
-        right_dc(75)
+
         forward()
 
 
@@ -199,11 +206,8 @@ while(1):
         
     
     elif x == 'pleft':
-        change_dc(80)
         pleft()
-        sleep(.7)
         
-        stop()
         
     elif x== 't':
         GPIO.output(in1,GPIO.HIGH)
