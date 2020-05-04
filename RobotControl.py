@@ -259,8 +259,10 @@ def followingWall():
             majorMotorControl(Direction.Right)
         if LSDist < dstFromWall - 10 and LSDist > (dstFromWall - 60): ## we are drifing in to the left
             print("need to turn slightly right")
+            dir_sr()
         elif LSDist > dstFromWall + 10:
             print("need to turn slightly left ")
+            dir_sl()
 
 
 
