@@ -271,7 +271,6 @@ def getSensorData():
 
 
 def get_Fdist():
-    time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
     GPIO.output(Trigger,False)
@@ -286,7 +285,6 @@ def get_Fdist():
     return distance
 
 def get_Ldist():
-    time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
     GPIO.output(Trigger,False)
@@ -305,7 +303,6 @@ def get_Ldist():
     return distance
 
 def get_Rdist():
-    time.sleep(sample_time)
     GPIO.output(Trigger, True)
     time.sleep(0.00001)
     GPIO.output(Trigger,False)
