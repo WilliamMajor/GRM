@@ -247,7 +247,7 @@ def followingWall():
             followWall = False
             break
 
-        if LSDist > 450: #this should be close to max range of the sensor so we know when basically there is nothing there
+        if LSDist > 200: #this should be close to max range of the sensor so we know when basically there is nothing there
             majorMotorControl(Direction.Left)#turn left to continue following eh wall
         if FSDist <= dstFromWall:
             majorMotorControl(Direction.Right)
@@ -279,6 +279,7 @@ def get_Fdist():
     stop = time.time()
     while GPIO.input(FEcho) == 0:
         start = time.time()
+        print('front loop')
     while GPIO.input(FEcho) == 1:
         stop = time.time()
     elapsed = stop - start
@@ -293,6 +294,7 @@ def get_Ldist():
     stop = time.time()
     while GPIO.input(LEcho) == 0:
         start = time.time()
+        print('left loop')
     
     
     while GPIO.input(LEcho) == 1:
@@ -311,6 +313,7 @@ def get_Rdist():
     stop = time.time()
     while GPIO.input(REcho) == 0:
         start = time.time()
+        print('right loop')
     
     
     while GPIO.input(REcho) == 1:
@@ -322,13 +325,14 @@ def get_Rdist():
     return round(distance, 2)
 
 def right_dc(num):
-    p.ChangeDutyCycle(num)
-    p2.ChangeDutyCycle(num)
+    p3.ChangeDutyCycle(num)
+    p4.ChangeDutyCycle(num)
     
 
 def left_dc(num):
-    p3.ChangeDutyCycle(num)
-    p4.ChangeDutyCycle(num)
+    p.ChangeDutyCycle(num)
+    p2.ChangeDutyCycle(num)
+    
     
 
 def half_dc(): 
@@ -418,9 +422,9 @@ try:
         # _thread.start_new_thread(followingWall, ())
         
         t1 = threading.Thread(target=getSensorData)
-        t2 = threading.Thread(target=followingWall)
+        #t2 = threading.Thread(target=followingWall)
         t1.start()
-        t2.start()
+       # t2.start()
         
     except:
         print("Error unable to start thread")
@@ -428,6 +432,9 @@ try:
 
     while 1:
         time.sleep(.5)
+        print(FSDist)
+        print(LSDist)
+        print(RSDist)
         
 except KeyboardInterrupt:
     GPIO.cleanup()
