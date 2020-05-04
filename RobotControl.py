@@ -403,9 +403,15 @@ def pright():
     GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
 
+
 def dir_sr():
-    left_dc(70)
-    right_dc(10)
+    left_dc(77)
+    right_dc(75)
+
+
+def dir_sl():
+    left_dc(75)
+    right_dc(77)
 
 
 #main thread for the program
