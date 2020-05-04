@@ -254,7 +254,7 @@ def followingWall():
 
         if LSDist > 200: #this should be close to max range of the sensor so we know when basically there is nothing there
             print("calling left turn")
-            majorMotorControl(Direction.Left)#turn left to continue following eh wall
+            pleft()#turn left to continue following eh wall
         if FSDist <= dstFromWall:
             majorMotorControl(Direction.Right)
         if LSDist < dstFromWall - 10 and LSDist > (dstFromWall - 60): ## we are drifing in to the left
