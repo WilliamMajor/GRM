@@ -22,6 +22,7 @@ class Direction(Enum):
 ending = False
 turning = False
 followWall = True
+sharpLeft = False
 
 #Gobal values for the lat and lon that we will be using
 startingLat = 0
@@ -355,7 +356,7 @@ def pleft():
     GPIO.output(in6,GPIO.HIGH)
     GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
-    sleep(.7)
+    time.sleep(0.7)
     stop()
 
 def pright():
@@ -368,7 +369,7 @@ def pright():
     GPIO.output(in6,GPIO.LOW)
     GPIO.output(in7,GPIO.HIGH)
     GPIO.output(in8,GPIO.HIGH)
-    sleep(.7)
+    time.sleep(0.7)
     stop()
 
 
@@ -423,14 +424,14 @@ def control_test():
             print("walk")
             change_dc(90)
             forward()
-            sleep(.30)
+            time.sleep(0.30)
             change_dc(40)
             temp1=1
         elif x== 'wb':
             print("walk backward")
             change_dc(90)
             backward()
-            sleep(.30)
+            time.sleep(0.30)
             change_dc(55)
             temp1=0
             
@@ -458,7 +459,7 @@ def control_test():
 
         elif x == 'sr': #slight right
             dir_sr()
-            sleep(.3)
+            time.sleep(0.3)
             
             
             
