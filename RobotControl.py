@@ -432,12 +432,13 @@ try:
 
     while 1:
         time.sleep(1)
-        print("Left\n\n")
+        print("Left")
         print(LSDist)
-        print("Right\n\n")
+        print("\n\nRight")
         print(RSDist)
-        print("Front\n\n")
+        print("\n\nFront")
         print(FSDist)
+        print("\n\n")
         
 except KeyboardInterrupt:
     GPIO.cleanup()
