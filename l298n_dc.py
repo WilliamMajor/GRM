@@ -1,20 +1,20 @@
 import RPi.GPIO as GPIO          
 from time import sleep
-#RIGHT WHEEL GPIO 
-en1 = 25 #right back enable
-in1 = 26 #right back wheel (+) input
-in2 = 23 #right back wheel (-) input
-en2 = 18 #right front enable
-in3 = 16 #right front wheel (+) input
-in4 = 17 #right front wheel (-) input
+#LEFT WHEEL GPIO 
+en1 = 25 #LEFT (+) enable
+in1 = 26 #LEFT  (+) input
+in2 = 23 #LEFT  (+) input
+en2 = 18 #LEFT (-) enable
+in3 = 16 #LEFT (-) input
+in4 = 17 #LEFT (-) input
 temp1=1
-#LEFT WHEEL GPIO
-en3 = 12
-in5 = 14
-in6 = 15
-en4 = 13
-in7 = 8
-in8 = 7
+#RIGHT WHEEL GPIO
+en3 = 12 #RIGHT (+) enable
+in5 = 14 #RIGHT  (+) input
+in6 = 15 #RIGHT  (+) input
+en4 = 13 #RIGHT (-) enable
+in7 = 8  #RIGHT (-) input
+in8 = 7  #RIGHT (-) input
 
 start_dc = 75
 
@@ -87,12 +87,12 @@ def start_dc1():
     p4.ChangeDutyCycle(start_dc)
 def forward():
     GPIO.output(in1,GPIO.HIGH)
-    GPIO.output(in2,GPIO.LOW)
-    GPIO.output(in3,GPIO.HIGH)
+    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(in3,GPIO.LOW)
     GPIO.output(in4,GPIO.LOW)
     GPIO.output(in5,GPIO.HIGH)
-    GPIO.output(in6,GPIO.LOW)
-    GPIO.output(in7,GPIO.HIGH)
+    GPIO.output(in6,GPIO.HIGH)
+    GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
 
 def backward():
@@ -119,14 +119,24 @@ def stop():
     GPIO.output(in8,GPIO.LOW)
 
 def pleft():
-    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in1,GPIO.LOW)
     GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3,GPIO.HIGH)
-    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in4,GPIO.HIGH)
     GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.HIGH)
+    GPIO.output(in8,GPIO.HIGH)
+
+def pright():
+    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.HIGH)
     GPIO.output(in6,GPIO.HIGH)
     GPIO.output(in7,GPIO.LOW)
-    GPIO.output(in8,GPIO.HIGH)
+    GPIO.output(in8,GPIO.LOW)
 
 def dir_sr():
     left_dc(70)
@@ -154,6 +164,8 @@ while(1):
     x=input()
     
     if x=='r':
+        left_dc(76)
+        right_dc(75)
         forward()
 
 
@@ -161,6 +173,8 @@ while(1):
         start_dc1()
         stop()
     
+    elif x== 'pright':
+        pright()
     elif x == 'f':
         print('forward')
         forward()
@@ -184,8 +198,20 @@ while(1):
     elif x == 'pleft':
         change_dc(100)
         pleft()
+        sleep(.7)
         
-
+        stop()
+        
+    elif x== 't':
+        GPIO.output(in1,GPIO.HIGH)
+        GPIO.output(in2,GPIO.HIGH)
+        GPIO.output(in3,GPIO.LOW)
+        GPIO.output(in4,GPIO.LOW)
+        GPIO.output(in5,GPIO.LOW)
+        GPIO.output(in6,GPIO.LOW)
+        GPIO.output(in7,GPIO.HIGH)
+        GPIO.output(in8,GPIO.HIGH)
+    
     elif x == 'no hoots':
         change_dc(100)
         forward()
