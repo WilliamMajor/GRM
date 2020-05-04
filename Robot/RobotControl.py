@@ -49,8 +49,8 @@ Trigger = 5
 
 # echo pin number they need to be changed to the pin to be used
 FEcho = 6
-LEcho = 19
-REcho = 9
+LEcho = 9
+REcho = 19
 
 #RIGHT WHEEL GPIO
 en1 = 25 #right back enable
@@ -193,7 +193,6 @@ def majorMotorControl(motorCommand):#This function will act as a deligator calli
 
 def followingWall():
     time.sleep(4)
-    change_dc(75)
     forward()
     global dstFromWall
     global followWall
@@ -310,6 +309,8 @@ def start_dc1():
     p4.ChangeDutyCycle(start_dc)
 def forward():
     print('foward')
+    left_dc(76)
+    right_dc(75)
     GPIO.output(in1,GPIO.LOW)
     GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3,GPIO.HIGH)
@@ -318,6 +319,9 @@ def forward():
     GPIO.output(in6,GPIO.HIGH)
     GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
+    sleep(1)
+    left_dc(56)
+    right_dc(55)
 
 def overdrive():
     print('overdrive mode')
