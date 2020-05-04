@@ -431,7 +431,13 @@ try:
 
 
     while 1:
-        time.sleep(.5)
+        time.sleep(1)
+        print("Left\n\n")
+        print(LSDist)
+        print("Right\n\n")
+        print(RSDist)
+        print("Front\n\n")
+        print(FSDist)
         
 except KeyboardInterrupt:
     GPIO.cleanup()
