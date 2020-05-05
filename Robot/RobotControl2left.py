@@ -1,0 +1,531 @@
+import RPi.GPIO as GPIO
+import threading
+import paramiko
+import select
+import time
+#import GeoFencing
+from enum import Enum
+
+
+    
+
+
+class Direction(Enum):
+    Forward = 0
+    Right = 1
+    Left = 2
+    Stop = 3
+    StartMotors = 4
+    Overdrive = 5
+
+#bools
+ending = False
+turning = False
+followWall = True
+turnedLeft = False
+
+#Gobal values for the lat and lon that we will be using
+startingLat = 0
+startingLon = 0
+leftUpperCornerLat = 0
+leftUpperCornerLon = 0
+rightUpperCornerLat = 0
+rightUpperCornerLon = 0
+rightLowerCornerLat = 0
+rightLowerCornerLat = 0
+currentLat = 0
+currentLon = 0
+dstFromWall = 200
+
+#sensor values
+LSFDist = 0
+LSBDist = 0
+FSDist = 0
+sample_time = 0.3
+
+#define all needed GPIO shit
+# trigger pin number they need to be changed to the pin to be used do we just need one trigger pin for all of them???
+Trigger = 5
+
+# echo pin number they need to be changed to the pin to be used
+FEcho = 6
+LEcho = 19
+REcho = 9
+
+#RIGHT WHEEL GPIO
+en1 = 25 #right back enable
+in1 = 26 #right back wheel (+) input
+in2 = 23 #right back wheel (-) input
+en2 = 18 #right front enable
+in3 = 16 #right front wheel (+) input
+in4 = 17 #right front wheel (-) input
+temp1=1
+#LEFT WHEELS GPIO
+en3 = 12
+in5 = 14
+in6 = 15
+en4 = 13
+in7 = 8
+in8 = 7
+
+start_dc = 75 #define the starting motorspeed
+
+GPIO.setmode(GPIO.BCM)#set the gpio to be defined by gpio number not pin number
+
+#setup for sensors
+GPIO.setup(Trigger, GPIO.OUT)
+GPIO.setup(FEcho, GPIO.IN)
+GPIO.setup(LEcho, GPIO.IN)
+GPIO.setup(REcho, GPIO.IN)
+
+
+
+#setup for motors
+#right wheel setup
+GPIO.setup(in1,GPIO.OUT)
+GPIO.setup(in2,GPIO.OUT)
+GPIO.setup(in3,GPIO.OUT)
+GPIO.setup(in4,GPIO.OUT)
+GPIO.setup(en1,GPIO.OUT) #ena
+GPIO.setup(en2,GPIO.OUT) #enb
+#left wheel setup
+GPIO.setup(in5,GPIO.OUT)
+GPIO.setup(in6,GPIO.OUT)
+GPIO.setup(in7,GPIO.OUT)
+GPIO.setup(in8,GPIO.OUT)
+GPIO.setup(en3,GPIO.OUT) #ena
+GPIO.setup(en4,GPIO.OUT) #enb
+
+#initialize wheels to not move
+GPIO.output(in1,GPIO.LOW)
+GPIO.output(in2,GPIO.LOW)
+GPIO.output(in3,GPIO.LOW)
+GPIO.output(in4,GPIO.LOW)
+GPIO.output(in5,GPIO.LOW)
+GPIO.output(in6,GPIO.LOW)
+GPIO.output(in7,GPIO.LOW)
+GPIO.output(in8,GPIO.LOW)
+#create PWM signals on enable pins
+p = GPIO.PWM(en1,1000)#back right motor pwm signal
+p2 = GPIO.PWM(en2, 1000)#front right motor pwm signal
+p3 = GPIO.PWM(en3, 1000)#back left motor pwm signal
+p4 = GPIO.PWM(en4, 1000)#front left motor pwm signal
+
+p.start(start_dc) 
+p2.start(start_dc)
+p3.start(start_dc)
+p4.start(start_dc)
+
+
+def getGPSData():#The program to get the gps data goes here
+    global startingLat
+    global startingLon
+    global currentLat
+    global currentLon
+    host = "169.254.20.224"
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(host, username="root", password="sensthys1701")
+    except:
+        print("Error Connecting to Reader")
+
+    #This will pull in the initial GPS so we know when we have gotten back to the starting point.
+    stdin, stdout, stderr = ssh.exec_command("/riot/Socket/./socket GPS")
+    while not stdout.channel.exit_status_ready():
+        # Only print data if there is data to read in the channel
+        if stdout.channel.recv_ready():
+            rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
+            if len(rl) > 0:
+                # Print data from stdout
+                data = stdout.channel.recv(1024)
+                if(type(data) != str ):
+                    data = data.decode("utf-8")
+                data = stdout.channel.recv(1024)
+                data = data.split('\n')
+                data = data[2]
+                data = data.split(':')
+                data = data[1]
+                data = data.strip()
+                data = data.split(',')
+                startingLat = data[0]
+                startingLon = data[1]
+
+    while not ending: #this is going to be pulling the gps data continually from the reader
+        stdin, stdout, stderr = ssh.exec_command("/riot/Socket/./socket GPS")
+        while not stdout.channel.exit_status_ready():
+            # Only print data if there is data to read in the channel
+            if stdout.channel.recv_ready():
+                rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
+                if len(rl) > 0:
+                    # Print data from stdout
+                    data = stdout.channel.recv(1024)
+                    data = data.split('\n')
+                    data = data[2]
+                    data = data.split(':')
+                    data = data[1]
+                    data = data.strip()
+                    data = data.split(',')
+                    currentLat = data[0]
+                    currentLon = data[1]
+        time.sleep(0.2)
+
+#Motor Control Functions
+def majorMotorControl(motorCommand):#This function will act as a deligator calling different controls based on the value passed to it from the master thread
+    if(motorCommand == 0):
+        print("forward")
+        forward()
+    elif(motorCommand == 1):
+        print("turnright")
+        pright()
+    elif(motorCommand == 2):
+        print("turnright")
+        pleft()
+    elif(motorCommand == 3):
+        print("stop")
+        stop()
+    elif(motorCommand == 4):
+        print("startMotors")
+    elif(motorCommand == 5):
+        print("Overdrive")
+        overdrive()
+
+
+def followingWall():
+    time.sleep(4)
+    change_dc(75)
+    forward()
+    global dstFromWall
+    global followWall
+    global turnedLeft
+    while(LSFDist == 0):
+        time.sleep(0.2)
+    dstFromWall = LSFDist
+    print(dstFromWall)
+    time.sleep(1)
+    while followWall:
+        if currentLat == startingLat and currentLon == startingLon and FSDist <= dstFromWall: # we will need to round the lat and lon to get  in the right ballpark
+            followWall = False
+            break
+
+        if (LSFDist > 500 and LSBDist > 500 and not turnedLeft):
+            print("calling left turn")
+            pleft()#turn left to continue following eh wall
+            turnedLeft = True 
+        if FSDist <= dstFromWall:
+            print('calling pright')
+            pright()
+
+        elif (LSFDist - LSBDist) > 30: ## we are drifing in to the left
+            print("need to turn slightly right")
+            dir_sr()
+        elif (LSBDist - LSFDist) > 30:
+            print("need to turn slightly left ")
+            dir_sl()
+
+
+
+
+def getSensorData():
+    global LSFDist
+    global LSBDist
+    global FSDist
+    while 1:
+        FSDist = get_Fdist()
+        LSFDist = get_LFdist()
+        LSBDist = get_LBdist()
+        time.sleep(0.1)
+
+
+
+def get_Fdist():
+    time.sleep(sample_time)
+    GPIO.output(Trigger, True)
+    time.sleep(0.00001)
+    GPIO.output(Trigger,False)
+    start = time.time()
+    stop = time.time()
+    while GPIO.input(FEcho) == 0:
+        start = time.time()
+    while GPIO.input(FEcho) == 1:
+        stop = time.time()
+    elapsed = stop - start
+    distance = elapsed * 17150 #speed of sound is 34300 cm/s
+    return round(distance, 2)
+
+def get_LBdist():
+    time.sleep(sample_time)
+    GPIO.output(Trigger, True)
+    time.sleep(0.00001)
+    GPIO.output(Trigger,False)
+    start = time.time()
+    stop = time.time()
+    while GPIO.input(LEcho) == 0:
+        start = time.time()
+    while GPIO.input(LEcho) == 1:
+        stop = time.time()
+    elapsed = stop - start
+    distance = elapsed * 17150 #speed of sound is 34300 cm/s
+    return round(distance, 2)
+
+def get_LFdist():
+    time.sleep(sample_time)
+    GPIO.output(Trigger, True)
+    time.sleep(0.00001)
+    GPIO.output(Trigger,False)
+    start = time.time()
+    stop = time.time()
+    while GPIO.input(REcho) == 0:
+        start = time.time()
+    while GPIO.input(REcho) == 1:
+        stop = time.time()
+    elapsed = stop - start
+    distance = elapsed * 17150 #speed of sound is 34300 cm/s
+    return round(distance, 2)
+
+def right_dc(num):
+    p3.ChangeDutyCycle(num)
+    p4.ChangeDutyCycle(num)
+    
+
+def left_dc(num):
+    p.ChangeDutyCycle(num)
+    p2.ChangeDutyCycle(num)
+    
+    
+
+def half_dc(): 
+    p.ChangeDutyCycle(15)
+    p2.ChangeDutyCycle(15)
+    p3.ChangeDutyCycle(15)
+    p4.ChangeDutyCycle(15)
+def change_dc(num):
+    print(f'changing DC to {num}')
+    p.ChangeDutyCycle(num)
+    p2.ChangeDutyCycle(num)
+    p3.ChangeDutyCycle(num)
+    p4.ChangeDutyCycle(num)
+
+def start_dc1():
+    p.ChangeDutyCycle(start_dc)
+    p2.ChangeDutyCycle(start_dc)
+    p3.ChangeDutyCycle(start_dc)
+    p4.ChangeDutyCycle(start_dc)
+def forward():
+    print('foward')
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.HIGH)
+    GPIO.output(in4,GPIO.HIGH)
+    GPIO.output(in5,GPIO.HIGH)
+    GPIO.output(in6,GPIO.HIGH)
+    GPIO.output(in7,GPIO.LOW)
+    GPIO.output(in8,GPIO.LOW)
+
+def overdrive():
+    print('overdrive mode')
+    change_dc(100)
+
+def backward():
+    print("backward")
+    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.HIGH)
+    GPIO.output(in8,GPIO.HIGH)
+    temp1=0
+
+def stop():
+    print("stop")
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.LOW)
+    GPIO.output(in8,GPIO.LOW)
+
+def pleft():
+    change_dc(80)
+    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.HIGH)
+    GPIO.output(in6,GPIO.HIGH)
+    GPIO.output(in7,GPIO.LOW)
+    GPIO.output(in8,GPIO.LOW)
+    time.sleep(0.7)
+    stop()
+
+def pright():
+    change_dc(80)
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.HIGH)
+    GPIO.output(in4,GPIO.HIGH)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.HIGH)
+    GPIO.output(in8,GPIO.HIGH)
+    time.sleep(0.7)
+    stop()
+
+
+def dir_sr():
+    left_dc(77)
+    right_dc(75)
+
+
+def dir_sl():
+    left_dc(75)
+    right_dc(77)
+
+def control_test():
+    while(1):
+        print('---Right Wheels---')
+        print(GPIO.input(en1))
+        print(GPIO.input(in1))
+        print(GPIO.input(in2))
+        print(GPIO.input(in3))
+        print(GPIO.input(in4))
+        print(GPIO.input(en2))
+        print('---Left Wheels---')
+        print(GPIO.input(en3))
+        print(GPIO.input(in5))
+        print(GPIO.input(in6))
+        print(GPIO.input(in7))
+        print(GPIO.input(in8))
+        print(GPIO.input(en4))
+        
+
+        
+        
+        x=input()
+        
+        if x=='r':
+            left_dc(76)
+            right_dc(75)
+            forward()
+
+
+        elif x=='s':
+            start_dc1()
+            stop()
+        
+        elif x== 'pright':
+            pright()
+        elif x == 'f':
+            print('forward')
+            forward()
+
+        elif x=='w':
+            print("walk")
+            change_dc(90)
+            forward()
+            time.sleep(0.30)
+            change_dc(40)
+            temp1=1
+        elif x== 'wb':
+            print("walk backward")
+            change_dc(90)
+            backward()
+            time.sleep(0.30)
+            change_dc(55)
+            temp1=0
+            
+        
+        elif x == 'pleft':
+            change_dc(80)
+            pleft()
+            sleep(.7)
+            stop()
+            
+        elif x== 't':
+            GPIO.output(in1,GPIO.HIGH)
+            GPIO.output(in2,GPIO.HIGH)
+            GPIO.output(in3,GPIO.LOW)
+            GPIO.output(in4,GPIO.LOW)
+            GPIO.output(in5,GPIO.LOW)
+            GPIO.output(in6,GPIO.LOW)
+            GPIO.output(in7,GPIO.HIGH)
+            GPIO.output(in8,GPIO.HIGH)
+        
+        elif x == 'no hoots':
+            change_dc(100)
+            forward()
+
+
+        elif x == 'sr': #slight right
+            dir_sr()
+            time.sleep(0.3)
+            
+            
+            
+        elif x == 'sl': #slight left, they're different right now because im' experimenting with things
+            dir_sl()
+            forward()
+            
+        elif x=='b':
+            backward()
+
+        elif x=='l':
+            print("low")
+            change_dc(25)
+        elif x=='m':
+            print("medium")
+            change_dc(50)
+
+        elif x=='h':
+            print("high")
+            change_dc(80)
+        
+
+        
+        elif x == 'o':
+            print('overdrive mode: DC 100%')
+            p.ChangeDutyCycle(100)
+            p2.ChangeDutyCycle(100)
+            p3.ChangeDutyCycle(100)
+            p4.ChangeDutyCycle(100)
+        
+            
+        
+        elif x=='e':
+            GPIO.cleanup()
+            p.stop()
+            p2.stop()
+            p3.stop()
+            p4.stop()
+            print("GPIO Clean up")
+            break
+        
+        
+        else:
+            print("<<<  wrong data  >>>")
+            print("please enter the defined data to continue.....")
+#main thread for the program
+try:
+    try:
+        # _thread.start_new_thread(getGPSData,())
+        # _thread.start_new_thread(followingWall, ())
+        #control_test()
+        t1 = threading.Thread(target=getSensorData)
+        t2 = threading.Thread(target=followingWall)
+        t1.start()
+        t2.start()
+        
+    except:
+        print("Error unable to start thread")
+
+    while 1:
+        time.sleep(1)
+        
+except KeyboardInterrupt:
+    GPIO.cleanup()
+except:
+    GPIO.cleanup()
