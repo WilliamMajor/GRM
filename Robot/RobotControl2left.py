@@ -216,10 +216,10 @@ def followingWall():
             print('calling pright')
             pright()
 
-        elif (LSFDist - LSBDist) > 30: ## we are drifing in to the left
+        elif (LSBDist - LSFDist) > 30: ## we are drifing in to the left
             print("need to turn slightly right")
             dir_sr()
-        elif (LSBDist - LSFDist) > 30:
+        elif (LSFDist - LSBDist) > 30:
             print("need to turn slightly left ")
             dir_sl()
 
