@@ -192,8 +192,7 @@ def majorMotorControl(motorCommand):#This function will act as a deligator calli
 
 
 def followingWall():
-    time.sleep(4)
-    change_dc(75)
+    time.sleep(3)
     forward()
     global dstFromWall
     global followWall
@@ -220,10 +219,6 @@ def followingWall():
             time.sleep(.5)
             pright()
             forward()
-<<<<<<< HEAD
-
-=======
->>>>>>> 09b797cc7b486d45f7f251e9fa236da463eb1143
         elif (LSBDist - LSFDist) > 30: ## we are drifing in to the left
             print("need to turn slightly right")
             dir_sr()
@@ -325,6 +320,8 @@ def start_dc1():
     p4.ChangeDutyCycle(start_dc)
 def forward():
     print('foward')
+    left_dc(78)
+    right_dc(52)
     GPIO.output(in1,GPIO.LOW)
     GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3,GPIO.HIGH)
@@ -333,6 +330,10 @@ def forward():
     GPIO.output(in6,GPIO.HIGH)
     GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
+    time.sleep(1)
+    left_dc(70)
+    right_dc(54)
+    time.sleep(1)
 
 def overdrive():
     print('overdrive mode')
