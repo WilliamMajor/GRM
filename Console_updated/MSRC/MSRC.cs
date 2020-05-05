@@ -137,10 +137,11 @@ namespace MSRC
         {
             InitializeComponent();
 
-            if (args.Length == 0)
-                DEBUG_VIEW = false;
-            else if (args[0] == "-grmdebug")
-                DEBUG_VIEW = true;
+            //if (args.Length == 0)
+            //    DEBUG_VIEW = false;
+            //else if (args[0] == "-grmdebug")
+            //    DEBUG_VIEW = true;
+            DEBUG_VIEW = true;
 
             int numWorkerThreads;
             int numComplPortThreads;
@@ -1658,7 +1659,7 @@ namespace MSRC
 
                                 if (value >= 512 && dataType != "TEMP")
                                 {
-                                    Console.WriteLine("===================================> Value ({0}) >= 512, Query type: {1}", value, dataType);
+                                    //Console.WriteLine("===================================> Value ({0}) >= 512, Query type: {1}", value, dataType);
                                     value = 0;
                                 }
 
@@ -2504,7 +2505,6 @@ public class TagObject
         this.MidFreq = 913250;
         this.SCDEValues     = new LinkedList<SCDEDatetime>();
         this.TempValues     = new LinkedList<TempDateTime>();
-        //this.TSSIValues     = new LinkedList<TSSIDatetime>();
     }
 }
 public class SCDEDatetime
