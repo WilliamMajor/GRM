@@ -211,7 +211,7 @@ def followingWall():
             print("calling left turn")
             pleft()#turn left to continue following eh wall
             forward()
-        if FSDist <= dstFromWall:
+        if FSDist <= dstFromWall or FSDist < 100:
             print('calling pright')
             stop()
             backward()
