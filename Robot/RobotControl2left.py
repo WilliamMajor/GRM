@@ -49,8 +49,8 @@ Trigger = 5
 
 # echo pin number they need to be changed to the pin to be used
 FEcho = 6
-LEcho = 19
-REcho = 9
+LEcho = 9
+REcho = 19
 
 #RIGHT WHEEL GPIO
 en1 = 25 #right back enable
@@ -214,14 +214,22 @@ def followingWall():
             turnedLeft = True 
         if FSDist <= dstFromWall:
             print('calling pright')
+            stop()
+            backward()
+            time.sleep(.5)
             pright()
+            forward()
 
         elif (LSBDist - LSFDist) > 30: ## we are drifing in to the left
             print("need to turn slightly right")
             dir_sr()
+            time.sleep(1.5)
+            forward()
         elif (LSFDist - LSBDist) > 30:
             print("need to turn slightly left ")
             dir_sl()
+            time.sleep(1.5)
+            forward()
 
 
 
@@ -375,7 +383,6 @@ def pright():
     time.sleep(0.7)
     stop()
 
-
 def dir_sr():
     left_dc(77)
     right_dc(75)
@@ -385,129 +392,6 @@ def dir_sl():
     left_dc(75)
     right_dc(77)
 
-def control_test():
-    while(1):
-        print('---Right Wheels---')
-        print(GPIO.input(en1))
-        print(GPIO.input(in1))
-        print(GPIO.input(in2))
-        print(GPIO.input(in3))
-        print(GPIO.input(in4))
-        print(GPIO.input(en2))
-        print('---Left Wheels---')
-        print(GPIO.input(en3))
-        print(GPIO.input(in5))
-        print(GPIO.input(in6))
-        print(GPIO.input(in7))
-        print(GPIO.input(in8))
-        print(GPIO.input(en4))
-        
-
-        
-        
-        x=input()
-        
-        if x=='r':
-            left_dc(76)
-            right_dc(75)
-            forward()
-
-
-        elif x=='s':
-            start_dc1()
-            stop()
-        
-        elif x== 'pright':
-            pright()
-        elif x == 'f':
-            print('forward')
-            forward()
-
-        elif x=='w':
-            print("walk")
-            change_dc(90)
-            forward()
-            time.sleep(0.30)
-            change_dc(40)
-            temp1=1
-        elif x== 'wb':
-            print("walk backward")
-            change_dc(90)
-            backward()
-            time.sleep(0.30)
-            change_dc(55)
-            temp1=0
-            
-        
-        elif x == 'pleft':
-            change_dc(80)
-            pleft()
-            sleep(.7)
-            stop()
-            
-        elif x== 't':
-            GPIO.output(in1,GPIO.HIGH)
-            GPIO.output(in2,GPIO.HIGH)
-            GPIO.output(in3,GPIO.LOW)
-            GPIO.output(in4,GPIO.LOW)
-            GPIO.output(in5,GPIO.LOW)
-            GPIO.output(in6,GPIO.LOW)
-            GPIO.output(in7,GPIO.HIGH)
-            GPIO.output(in8,GPIO.HIGH)
-        
-        elif x == 'no hoots':
-            change_dc(100)
-            forward()
-
-
-        elif x == 'sr': #slight right
-            dir_sr()
-            time.sleep(0.3)
-            
-            
-            
-        elif x == 'sl': #slight left, they're different right now because im' experimenting with things
-            dir_sl()
-            forward()
-            
-        elif x=='b':
-            backward()
-
-        elif x=='l':
-            print("low")
-            change_dc(25)
-        elif x=='m':
-            print("medium")
-            change_dc(50)
-
-        elif x=='h':
-            print("high")
-            change_dc(80)
-        
-
-        
-        elif x == 'o':
-            print('overdrive mode: DC 100%')
-            p.ChangeDutyCycle(100)
-            p2.ChangeDutyCycle(100)
-            p3.ChangeDutyCycle(100)
-            p4.ChangeDutyCycle(100)
-        
-            
-        
-        elif x=='e':
-            GPIO.cleanup()
-            p.stop()
-            p2.stop()
-            p3.stop()
-            p4.stop()
-            print("GPIO Clean up")
-            break
-        
-        
-        else:
-            print("<<<  wrong data  >>>")
-            print("please enter the defined data to continue.....")
 #main thread for the program
 try:
     try:
