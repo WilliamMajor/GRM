@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/epc"
+        android:textSize="20sp"
+        android:layout_width="0sp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.7"
+        android:maxLines="2"
+        android:paddingLeft="5sp"
+        android:paddingRight="5sp"
+        android:layout_marginStart="10sp" />
+
+    <View
+        android:layout_width="1sp"
+        android:layout_height="fill_parent"
+        android:background="?android:attr/listDivider" />
+
+    <TextView
+        android:id="@+id/code"
+        android:textSize="20sp"
+        android:layout_width="0sp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.3"
+        android:paddingLeft="5sp"
+        android:paddingRight="5sp"
+        android:layout_marginStart="10sp" />
+
+</LinearLayout>

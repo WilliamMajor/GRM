@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">GRM</string>
+    <string name="table">Click to go to table</string>
+    <string name="epc">EPC</string>
+    <string name="temp">Temp (°C)</string>
+    <string name="code">Code</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+</resources>

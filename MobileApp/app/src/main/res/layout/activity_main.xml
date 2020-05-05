@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/splash_screen_image"
+                android:backgroundTint="#80FFFFFF"
+                android:backgroundTintMode="src_over">
+
+    <Button
+        android:id="@+id/button_id"
+        android:text="@string/table"
+        android:textSize="25sp"
+        android:textColor="#FFFFFF"
+        android:background="@color/colorPrimaryDark"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_centerInParent="true"
+        android:padding="10sp" />
+
+</RelativeLayout>
