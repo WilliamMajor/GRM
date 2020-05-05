@@ -193,7 +193,7 @@ def majorMotorControl(motorCommand):#This function will act as a deligator calli
 
 def followingWall():
     time.sleep(4)
-    forward()
+
     global dstFromWall
     global followWall
     while(LSDist == 0):
@@ -201,6 +201,7 @@ def followingWall():
     dstFromWall = LSDist
     print(dstFromWall)
     time.sleep(1)
+    forward()
     while followWall:
         if currentLat == startingLat and currentLon == startingLon and FSDist <= dstFromWall: # we will need to round the lat and lon to get  in the right ballpark
             followWall = False
