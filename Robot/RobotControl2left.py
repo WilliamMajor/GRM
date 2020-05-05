@@ -215,16 +215,17 @@ def followingWall():
         if FSDist <= dstFromWall:
             print('calling pright')
             stop()
+            overdrive()
             backward()
-            time.sleep(.5)
+            time.sleep(.3)
             pright()
             forward()
-        elif (LSBDist - LSFDist) > 30: ## we are drifing in to the left
+        elif (LSBDist - LSFDist) > 20: ## we are drifing in to the left
             print("need to turn slightly right")
             dir_sr()
             time.sleep(1.5)
             forward()
-        elif (LSFDist - LSBDist) > 30:
+        elif (LSFDist - LSBDist) > 20:
             print("need to turn slightly left ")
             dir_sl()
             time.sleep(1.5)
@@ -389,13 +390,14 @@ def pright():
     stop()
 
 def dir_sr():
-    left_dc(77)
-    right_dc(75)
-
+    left_dc(74)
+    right_dc(64)
+    time.sleep(2)
 
 def dir_sl():
-    left_dc(75)
-    right_dc(77)
+    left_dc(64)
+    right_dc(74)
+    time.sleep(2)
 
 #main thread for the program
 try:
