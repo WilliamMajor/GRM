@@ -212,7 +212,7 @@ def followingWall():
             pleft()#turn left to continue following eh wall
             forward()
             turnedLeft = True 
-        if FSDist <= dstFromWall:
+        if FSDist <= 50:
             print('calling pright')
             stop()
             overdrive()
@@ -220,16 +220,14 @@ def followingWall():
             time.sleep(.3)
             pright()
             forward()
-        elif (LSBDist - LSFDist) > 20: ## we are drifing in to the left
+        elif (LSBDist - LSFDist) > 10: ## we are drifing in to the left
             print("need to turn slightly right")
             dir_sr()
-            time.sleep(1.5)
-            forward()
-        elif (LSFDist - LSBDist) > 20:
+            #forward()
+        elif (LSFDist - LSBDist) > 10:
             print("need to turn slightly left ")
             dir_sl()
-            time.sleep(1.5)
-            forward()
+            #forward()
 
 
 
@@ -331,9 +329,9 @@ def forward():
     GPIO.output(in6,GPIO.HIGH)
     GPIO.output(in7,GPIO.LOW)
     GPIO.output(in8,GPIO.LOW)
-    time.sleep(1)
+    time.sleep(.8)
     left_dc(70)
-    right_dc(54)
+    right_dc(65)
     time.sleep(1)
 
 def overdrive():
@@ -390,14 +388,14 @@ def pright():
     stop()
 
 def dir_sr():
-    left_dc(74)
+    left_dc(75)
     right_dc(64)
-    time.sleep(2)
+    time.sleep(1)
 
 def dir_sl():
     left_dc(64)
-    right_dc(74)
-    time.sleep(2)
+    right_dc(75)
+    time.sleep(1)
 
 #main thread for the program
 try:
