@@ -211,6 +211,7 @@ def followingWall():
         if (LSFDist > 500 and LSBDist > 500 and not turnedLeft):
             print("calling left turn")
             pleft()#turn left to continue following eh wall
+            forward()
             turnedLeft = True 
         if FSDist <= dstFromWall:
             print('calling pright')
@@ -219,7 +220,10 @@ def followingWall():
             time.sleep(.5)
             pright()
             forward()
+<<<<<<< HEAD
 
+=======
+>>>>>>> 09b797cc7b486d45f7f251e9fa236da463eb1143
         elif (LSBDist - LSFDist) > 30: ## we are drifing in to the left
             print("need to turn slightly right")
             dir_sr()
