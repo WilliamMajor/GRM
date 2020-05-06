@@ -3,7 +3,8 @@ import threading
 import paramiko
 import select
 import time
-#import GeoFencing
+import GeoFencing
+import random
 from enum import Enum
 
 
@@ -23,6 +24,7 @@ ending = False
 turning = False
 followWall = True
 sharpLeft = False
+roombaModeActive = False
 
 #Gobal values for the lat and lon that we will be using
 startingLat = 0
@@ -116,6 +118,8 @@ p2.start(start_dc)
 p3.start(start_dc)
 p4.start(start_dc)
 
+geoFence = GeoFencing.Fence()
+
 
 def getGPSData():#The program to get the gps data goes here
     global startingLat
@@ -196,6 +200,7 @@ def followingWall():
 
     global dstFromWall
     global followWall
+    global roombaModeActive
     while(LSDist == 0):
         time.sleep(0.2)
     dstFromWall = LSDist
@@ -203,8 +208,10 @@ def followingWall():
     time.sleep(1)
     forward()
     while followWall:
+        geoFence.add_point((currentLat, currentLon))
         if currentLat == startingLat and currentLon == startingLon and FSDist <= dstFromWall: # we will need to round the lat and lon to get  in the right ballpark
             followWall = False
+            roombaModeActive = True
             break
 
         if LSDist > 500: #this should be close to max range of the sensor so we know when basically there is nothing there
@@ -228,6 +235,17 @@ def followingWall():
             dir_sl()
             time.sleep(1.5)
             forward()
+
+def roombaMode():
+    while followWall:
+        time.sleep(0.5)
+    while roombaModeActive:
+        if geoFence.check_point((currentLat, currentLon)):
+            sleeptime = random.random()
+            prightTime(time = sleeptime)
+            forward()
+        else:
+            time.sleep(0.2)
 
 
 
@@ -350,7 +368,6 @@ def backward():
     GPIO.output(in7,GPIO.HIGH)
     GPIO.output(in8,GPIO.HIGH)
     time.sleep(.5)
-    temp1=0
 
 def stop():
     print("stop")
@@ -391,6 +408,20 @@ def pright():
     stop()
     time.sleep(1)
 
+def prightTime(time):
+    change_dc(80)
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in3,GPIO.HIGH)
+    GPIO.output(in4,GPIO.HIGH)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
+    GPIO.output(in7,GPIO.HIGH)
+    GPIO.output(in8,GPIO.HIGH)
+    time.sleep(time)
+    stop()
+    time.sleep(1)
+
 
 def dir_sr():
     left_dc(77)
@@ -405,12 +436,14 @@ def dir_sl():
 try:
     try:
         # _thread.start_new_thread(getGPSData,())
-        # _thread.start_new_thread(followingWall, ())
+        
         #control_test()
         t1 = threading.Thread(target=getSensorData)
         t2 = threading.Thread(target=followingWall)
+        t3 = threading.Thread(target=roombaMode)
         t1.start()
         t2.start()
+        t3.start()
         
     except:
         print("Error unable to start thread")
