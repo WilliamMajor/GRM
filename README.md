@@ -12,8 +12,11 @@ GPS guided robot.
 The breakdown of member contribution is as follows
 
 William Major: CommandLine, Console_updated, Robot, MobileApp, Documentation, and Reports
+
 Austin Tran: Robot, Documentation, and Reports
+
 Sero Nazarian: Documentation, and Reports
+
 Rohan Patel:
 
 
