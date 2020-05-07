@@ -8,5 +8,4 @@ packages/
 .vs/
 *.xlsx
 *.csv
-MSRC/bin/
 MSRC/obj/

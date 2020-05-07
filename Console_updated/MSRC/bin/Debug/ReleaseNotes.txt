@@ -1,0 +1,5 @@
+MSRC V1.0.4.0 Release Notes (2019-03-30):
+
+	•   Fixed Bug with temperature reading.
+	•   Limited displayed temperature to 1 Decimal point
+	•   Fixed bad starting TSSI values.

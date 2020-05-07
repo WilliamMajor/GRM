@@ -316,15 +316,14 @@ def right_dc(num):
 def left_dc(num):
     print(f'left DC to {num}')
     p.ChangeDutyCycle(num)
-    p2.ChangeDutyCycle(num)
-    
-    
+    p2.ChangeDutyCycle(num)  
 
 def half_dc(): 
     p.ChangeDutyCycle(15)
     p2.ChangeDutyCycle(15)
     p3.ChangeDutyCycle(15)
     p4.ChangeDutyCycle(15)
+
 def change_dc(num):
     print(f'changing DC to {num}')
     p.ChangeDutyCycle(num)
@@ -337,6 +336,7 @@ def start_dc1():
     p2.ChangeDutyCycle(start_dc)
     p3.ChangeDutyCycle(start_dc)
     p4.ChangeDutyCycle(start_dc)
+
 def forward():
     print('foward')
     left_dc(76)
@@ -352,6 +352,7 @@ def forward():
     time.sleep(1)
     left_dc(60)
     right_dc(65)
+
 def overdrive():
     print('overdrive mode')
     change_dc(100)
@@ -435,9 +436,6 @@ def dir_sl():
 #main thread for the program
 try:
     try:
-        # _thread.start_new_thread(getGPSData,())
-        
-        #control_test()
         t1 = threading.Thread(target=getSensorData)
         t2 = threading.Thread(target=followingWall)
         t3 = threading.Thread(target=roombaMode)
